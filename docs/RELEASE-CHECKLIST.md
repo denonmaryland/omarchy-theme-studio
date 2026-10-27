@@ -49,8 +49,15 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
 - [ ] Submit with `gh issue create` (owner reviews the issue text first).
 
 ## Still open
-- [ ] Test on a clean user account with Omarchy's stock bar (so far: stock popup host
-      tested inside the author's bar via `omarchy-shell <id> host stock`).
+- [x] Clean user account, stock Omarchy config (/etc/skel) and stock bar, nested Hyprland
+      (2026-10-26): `omarchy plugin add file://… --enable --yes` validated, installed and
+      placed the widget; `omarchy plugin update` worked; panel opens in the stock popup
+      with the 22 stock themes, Discover (373), Recent (0). Found + fixed: rotation was on
+      by default; compact gallery overflowed a 960 px-tall screen; filter cramped in the
+      monospace font (Add label now hides). Verified after fix: rotation paused on first
+      run, filter roomy.
+- [ ] Re-check the compact gallery fit on a short screen with the lowered minimum
+      (c4988a4); the test session's shell was lost to a harness mistake before re-check.
 - [ ] Code review (owner will use a different model).
 - [ ] Retake preview.png from the final UI.
 - [ ] Push to a private GitHub repo for review, then make public and submit.
