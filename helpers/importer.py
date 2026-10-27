@@ -49,6 +49,13 @@ ARCHIVE_EXT = ('.zip', '.tar.gz', '.tgz', '.tar.xz', '.txz', '.tar.bz2', '.tar')
 MAX_IMAGE = 80 * 1024 * 1024
 MAX_ARCHIVE = 400 * 1024 * 1024
 MAX_PAGE = 3 * 1024 * 1024
+MAX_UNPACKED = 1024 * 1024 * 1024  # archive contents, total
+MAX_ENTRIES = 5000                 # archive members
+# Files a downloaded theme may not ship because they run code. Mirrors
+# omarchy-theme-set's INSTALLED_THEME_DENIED (+ every .lua), which Omarchy only
+# applies to themes that still have a .git folder.
+CODE_FILES = ('alacritty.toml', 'foot.ini', 'ghostty.conf', 'kitty.conf', 'vscode.json')
+GIT_SAFE = ['-c', 'core.symlinks=false', '-c', 'protocol.file.allow=never', '-c', 'submodule.recurse=false']
 NAME_RE = re.compile(r'^[a-z0-9_][a-z0-9._+-]*$')
 
 
@@ -61,7 +68,8 @@ def say(msg):
 
 
 def run(*args, timeout=180, cwd=None):
-    r = subprocess.run(args, text=True, capture_output=True, timeout=timeout, cwd=cwd)
+    env = dict(os.environ, GIT_TERMINAL_PROMPT='0')
+    r = subprocess.run(args, text=True, capture_output=True, timeout=timeout, cwd=cwd, env=env)
     if r.returncode:
         raise Fail((r.stderr or r.stdout or f'{args[0]} failed').strip()[-300:])
     return r.stdout.strip()
@@ -176,12 +184,16 @@ def describe(kinds):
 # ---------------------------------------------------------------- network
 
 def fetch(url, limit, accept=None):
+    if urllib.parse.urlparse(url).scheme not in ('https', 'http'):
+        raise Fail('Only http(s) links can be downloaded')
     req = urllib.request.Request(url, headers={'User-Agent': UA, **({'Accept': accept} if accept else {})})
     with urllib.request.urlopen(req, timeout=40) as r:
         ctype = r.headers.get('Content-Type', '')
         size = int(r.headers.get('Content-Length') or 0)
         if size and size > limit:
             raise Fail(f'{url} is too large ({size // 1048576} MB)')
+        if urllib.parse.urlparse(r.geturl()).scheme not in ('https', 'http'):
+            raise Fail('That link redirects somewhere that cannot be downloaded')
         data = r.read(limit + 1)
         if len(data) > limit:
             raise Fail(f'{url} is too large')
@@ -289,13 +301,19 @@ def safe_extract(archive, dest):
     dest = dest.resolve()
     if zipfile.is_zipfile(archive):
         with zipfile.ZipFile(archive) as z:
-            for m in z.infolist():
+            members = z.infolist()
+            if len(members) > MAX_ENTRIES or sum(m.file_size for m in members) > MAX_UNPACKED:
+                raise Fail('Archive is too large to unpack')
+            for m in members:
                 target = (dest / m.filename).resolve()
                 if not str(target).startswith(str(dest) + os.sep) and target != dest:
                     raise Fail('Archive contains unsafe paths')
             z.extractall(dest)
     else:
         with tarfile.open(archive) as t:
+            members = t.getmembers()
+            if len(members) > MAX_ENTRIES or sum(m.size for m in members if m.isfile()) > MAX_UNPACKED:
+                raise Fail('Archive is too large to unpack')
             t.extractall(dest, filter='data')
     entries = [p for p in dest.iterdir() if not p.name.startswith(('.', '__MACOSX'))]
     return entries[0] if len(entries) == 1 and entries[0].is_dir() else dest
@@ -330,10 +348,30 @@ def free_slug(base):
     return slug
 
 
-def install_folder(src, slug):
+def strip_code(folder):
+    """Remove symlinks and files that run code; returns how many were removed."""
+    removed = 0
+    for path in sorted(folder.rglob('*'), key=lambda p: len(p.parts), reverse=True):
+        if path.is_symlink() or (path.is_file() and (path.suffix == '.lua' or path.name in CODE_FILES)):
+            path.unlink()
+            removed += 1
+    return removed
+
+
+def install_folder(src, slug, source=None):
+    """Copy a theme folder that came without .git (archive, page, repo subfolder, folder).
+
+    Omarchy trusts such folders like the user's own, so anything that could run
+    code is stripped first, and links are never followed out of the source.
+    """
     target = THEMES / slug
     THEMES.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(src, target, ignore=shutil.ignore_patterns('.git', '.github', '__MACOSX'))
+    shutil.copytree(src, target, symlinks=True, ignore=shutil.ignore_patterns('.git', '.github', '__MACOSX'))
+    removed = strip_code(target)
+    if removed:
+        say(f'Removed {removed} file(s) that could run code')
+    if source:
+        (target / 'SOURCE.json').write_text(json.dumps(source, indent=2) + '\n')
     return target
 
 
@@ -604,13 +642,15 @@ def install_git(url, name_hint, mode='auto'):
             origin = ''
         if origin.removesuffix('.git').rstrip('/') == url.removesuffix('.git').rstrip('/'):
             say('Already installed, updating…')
-            run('git', '-C', str(target), 'pull', '--ff-only', timeout=180)
+            run('git', *GIT_SAFE, '-C', str(target), 'pull', '--ff-only', '--no-recurse-submodules', timeout=180)
             return base, 'git'
     tmp = Path(tempfile.mkdtemp(prefix='theme-studio-'))
     try:
         say('Downloading ' + '/'.join(url.rstrip('/').split('/')[-2:]) + '…')
-        run('git', 'clone', '--depth', '1', '--', url, str(tmp / 'repo'), timeout=300)
+        run('git', *GIT_SAFE, 'clone', '--config', 'core.symlinks=false', '--depth', '1', '--no-recurse-submodules', '--', url, str(tmp / 'repo'), timeout=300)
         repo = tmp / 'repo'
+        commit = run('git', '-C', str(repo), 'rev-parse', 'HEAD', timeout=10).strip()
+        say(f'Got {"/".join(url.rstrip("/").split("/")[-2:])} at {commit[:12]}')
         root = find_theme_root(repo)
         if root == repo:
             slug = free_slug(base)
@@ -618,7 +658,7 @@ def install_git(url, name_hint, mode='auto'):
             return slug, 'git'
         if root is not None:
             slug = free_slug(slugify(root.name) if root.name not in ('theme', 'src') else base)
-            install_folder(root, slug)
+            install_folder(root, slug, {'url': url, 'commit': commit, 'path': str(root.relative_to(repo)), 'installed_at': int(time.time())})
             return slug, 'git'
         imgs = images_in(repo)
         if imgs:
