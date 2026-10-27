@@ -1467,7 +1467,7 @@ Panel {
           // Room for the pile on top-row lookalike stacks.
           topMargin: Style.space(4)
           height: root.expanded ? Math.max(Style.space(200), rightPane.height - y)
-                                : root.fitted(Math.min(contentHeight + topMargin, (thumbH + Style.space(46)) * (root.reviewing ? 2 : 3)), Math.min(contentHeight + topMargin, thumbH + Style.space(46)))
+                                : root.fitted(Math.min(contentHeight + topMargin, (thumbH + Style.space(46)) * (root.reviewing ? 2 : 3)), Style.space(96))
           cellWidth: width / root.gridCols
           cellHeight: thumbH + Style.space(46)
           clip: true
@@ -1770,7 +1770,7 @@ Panel {
             width: parent.width
             readonly property real thumbH: Math.round((width / root.gridCols - Style.space(9)) * 0.62)
             height: root.expanded ? Math.max(Style.space(200), rightPane.height - discoverCol.y - y)
-                                  : root.fitted(Math.min(contentHeight, (thumbH + Style.space(46)) * (root.discoverPick ? 2 : 3)), Math.min(contentHeight, thumbH + Style.space(46)))
+                                  : root.fitted(Math.min(contentHeight, (thumbH + Style.space(46)) * (root.discoverPick ? 2 : 3)), Style.space(96))
             cellWidth: width / root.gridCols
             cellHeight: thumbH + Style.space(46)
             clip: true
@@ -2123,7 +2123,7 @@ Panel {
             readonly property int cols: root.expanded ? 3 : 2
             readonly property real thumbH: Math.round((width / cols - Style.space(8)) * 0.58)
             height: root.expanded ? Math.max(Style.space(180), rightPane.height - findMoreCol.y - y - Style.space(80))
-                                  : root.fitted(Math.min(contentHeight, (thumbH + Style.space(30)) * (root.wallPick ? 1.5 : 2.6)), Math.min(contentHeight, thumbH + Style.space(30)))
+                                  : root.fitted(Math.min(contentHeight, (thumbH + Style.space(30)) * (root.wallPick ? 1.5 : 2.6)), Style.space(96))
             cellWidth: width / cols
             cellHeight: thumbH + Style.space(30)
             clip: true
