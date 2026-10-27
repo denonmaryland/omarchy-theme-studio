@@ -1,0 +1,11 @@
+[Unit]
+Description=Rotate Omarchy themes at the selected interval
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/share/omarchy-theme-rotation/control.py daemon
+Restart=on-failure
+RestartSec=30
+UMask=0077

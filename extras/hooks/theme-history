@@ -1,0 +1,10 @@
+#!/bin/bash
+# Theme Studio: remember recent themes so deleting one returns to the theme
+# you were on before it, however that theme was applied.
+[[ -n $1 ]] || exit 0
+state="$HOME/.local/state/omarchy-theme-rotation"
+mkdir -p "$state"
+file="$state/history"
+last=$(tail -n 1 "$file" 2>/dev/null)
+[[ $last == "$1" ]] && exit 0
+{ grep -vxF -- "$1" "$file" 2>/dev/null | tail -n 19; echo "$1"; } > "$file.pending" && mv "$file.pending" "$file"
