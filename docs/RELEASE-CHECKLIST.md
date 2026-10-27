@@ -6,7 +6,7 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
 ## Repository basics
 - [x] Own repository, `manifest.json` at the root
 - [x] Permanent ID `io.github.denonmaryland.theme-studio`, category Appearance
-- [x] `preview.png` at the root (panel-only screenshot; retake once the UI is final)
+- [x] `preview.png` at the root (panel-only screenshot of the final UI)
 - [x] LICENSE file (owner to choose; MIT is the common choice)
 - [x] README with install, removal, external dependencies (draft present)
 - [x] Private GitHub repository: https://github.com/denonmaryland/omarchy-theme-studio
@@ -97,6 +97,6 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
       label readable with dark accents.
 - [x] Background thumbnails load from the theme's own folder, so a switch no
       longer leaves them pointing at the replaced `current/theme/backgrounds`.
-- [ ] Retake preview.png from the final UI.
+- [x] Retake preview.png from the final UI (2026-10-27, wide panel, live QML of 3a477cd).
 - [ ] Prepare promo video/screenshots with licensed assets and no private desktop data.
 - [ ] After review: make public and submit.
