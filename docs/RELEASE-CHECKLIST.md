@@ -45,7 +45,7 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
 - [x] Runtime files only in `$XDG_RUNTIME_DIR` / owner-only dirs.
 
 ## Compatibility and polish
-- [ ] Works on stock Omarchy with the default bar; test on a clean user account.
+- [x] Works on stock Omarchy with the default bar; tested on a clean user account.
 - [x] Tolerate missing optional tools (ImageMagick `magick`, `notify-send`, `git`).
 - [x] `omarchy plugin validate .` clean on the reviewed local source (2026-10-26).
 - [ ] Final release version and CHANGELOG; validate the exact release candidate again.
@@ -59,8 +59,11 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
       by default; compact gallery overflowed a 960 px-tall screen; filter cramped in the
       monospace font (Add label now hides). Verified after fix: rotation paused on first
       run, filter roomy.
-- [ ] Re-check the compact gallery fit on a short screen with the lowered minimum
-      (c4988a4); the test session's shell was lost to a harness mistake before re-check.
+- [x] Clean account, stock bar, 1366x700 screen (2026-10-27, 60e954d): installed
+      from a local clone with `omarchy plugin add`, widget placed on the stock
+      bar, panel opens in the stock popup, compact gallery fits (two rows, footer
+      visible). Note: after a live resize of the nested display the shell kept
+      the old screen height until restarted (Omarchy shell behavior).
 - [x] Targeted helper/install review (2026-10-26): three findings fixed locally;
       Git updates stage before replacement, legacy palettes are extracted before
       stripping terminal configs, failed switches keep newer queued selections.
@@ -83,8 +86,12 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
       picks 1.2 s apart (each landed on its target), buttons disabled while
       stale, collapse once the pointer left the grid; Surprise me shows no
       review; hero label readable on Hinterlands; Surprise me clicked twice
-      150 ms apart applied two random themes in order (de2b245). Still open:
-      failed-update and failed-switch paths (test-only), stock host.
+      150 ms apart applied two random themes in order (de2b245).
+      2026-10-27 failure paths, live: a theme deleted 5 ms after its click
+      failed and showed "That theme didn't apply…"; with a newer pick queued
+      the newer pick still applied. A diverged Git update of `futurism` was
+      refused, kept its commit and a local file, left no staging folder, and
+      now reports a plain sentence instead of git's hints.
 - [x] Polish from the walkthrough fixed: review card no longer shifts the grid
       under the pointer; Surprise me no longer asks for a rotation review; hero
       label readable with dark accents.

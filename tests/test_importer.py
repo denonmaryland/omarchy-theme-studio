@@ -97,9 +97,21 @@ class ImporterTests(unittest.TestCase):
         (target / 'colors.toml').write_text('background = "#ffffff"\n')
         (repo / 'colors.toml').write_text('background = "#abcdef"\n')
         self.commit(repo)
-        with self.assertRaises(importer.Fail):
+        with self.assertRaisesRegex(importer.Fail, r"can't be updated automatically; the installed theme was kept$"):
             importer.install_git(repo.as_uri(), '')
         self.assertIn('#ffffff', (target / 'colors.toml').read_text())
+        self.assertEqual((target / 'personal-notes.txt').read_text(), 'keep me')
+
+    def test_diverged_update_keeps_the_installed_commit(self):
+        repo, target = self.repository()
+        git(target, '-c', 'user.name=Local', '-c', 'user.email=local@example.invalid',
+            'commit', '--amend', '--allow-empty', '-m', 'local change')
+        before = git(target, 'rev-parse', 'HEAD')
+        (repo / 'colors.toml').write_text('background = "#abcdef"\n')
+        self.commit(repo)
+        with self.assertRaisesRegex(importer.Fail, r"can't be updated automatically; the installed theme was kept$"):
+            importer.install_git(repo.as_uri(), '')
+        self.assertEqual(git(target, 'rev-parse', 'HEAD'), before)
         self.assertEqual((target / 'personal-notes.txt').read_text(), 'keep me')
 
     def test_failed_directory_swap_restores_the_previous_installation(self):

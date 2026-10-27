@@ -412,7 +412,15 @@ def update_git(target):
     with tempfile.TemporaryDirectory(prefix='.theme-studio-update-', dir=THEMES.parent) as tmp:
         stage, previous = Path(tmp) / 'repo', Path(tmp) / 'previous'
         shutil.copytree(target, stage, symlinks=True)
-        run('git', *GIT_SAFE, '-C', str(stage), 'pull', '--ff-only', '--no-recurse-submodules', timeout=180)
+        try:
+            run('git', *GIT_SAFE, '-C', str(stage), 'pull', '--ff-only', '--no-recurse-submodules', timeout=180)
+        except Fail as exc:
+            # Git's own output is a block of hints; give one plain sentence.
+            detail = (str(exc).strip().splitlines() or [''])[-1].removeprefix('fatal: ')
+            if any(k in str(exc) for k in ('fast-forward', 'commit or stash', 'would be overwritten')):
+                raise Fail('This theme has its own changes, so it can\'t be updated automatically; '
+                           'the installed theme was kept') from None
+            raise Fail(f'The update failed ({detail}); the installed theme was kept') from None
         if not usable_theme(stage):
             raise Fail('The update did not contain a usable theme; the installed theme was kept')
         target.rename(previous)

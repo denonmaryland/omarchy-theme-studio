@@ -601,7 +601,7 @@ Panel {
         if (root.themeSeq === root.activeSeq) root.wantTheme = ""
         if (!root.wantTheme) root.optimistic = ""
         root.themeError = true
-        root.message = "That theme didn't apply. Check the service log."
+        root.message = "That theme didn't apply. It may have been removed; try another."
       }
       root.activeTheme = ""
       Qt.callLater(root.pumpTheme)
