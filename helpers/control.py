@@ -203,8 +203,11 @@ def make_thumbs(limit=400):
         src = item.get('source')
         if not src or (dest.is_file() and dest.stat().st_mtime >= Path(src).stat().st_mtime):
             continue
-        subprocess.run(['magick', src + '[0]', '-resize', '360x220^', '-gravity', 'center', '-extent', '360x220',
-                        '-quality', '82', str(dest)], capture_output=True, timeout=90)
+        try:
+            subprocess.run(['magick', src + '[0]', '-resize', '360x220^', '-gravity', 'center', '-extent', '360x220',
+                            '-quality', '82', str(dest)], capture_output=True, timeout=90)
+        except FileNotFoundError:
+            return made  # no ImageMagick: tiles fall back to full-size previews
         made += 1
         if made >= limit:
             break
@@ -212,7 +215,10 @@ def make_thumbs(limit=400):
 
 
 def command(*args, timeout=120):
-    result = subprocess.run(args, text=True, capture_output=True, timeout=timeout)
+    try:
+        result = subprocess.run(args, text=True, capture_output=True, timeout=timeout)
+    except FileNotFoundError:
+        raise RuntimeError(f'{args[0]} is not installed') from None
     if result.returncode:
         raise RuntimeError((result.stderr or result.stdout or f'{args[0]} failed').strip()[-400:])
     return result.stdout.strip()
@@ -845,7 +851,10 @@ def open_review():
             return
         except Exception:
             time.sleep(1)
-    subprocess.run(['notify-send', 'Theme changed', 'Open the palette icon in the bar if you want to delete this theme.'], check=False, timeout=8)
+    try:
+        subprocess.run(['notify-send', 'Theme changed', 'Open Theme Studio in the bar to keep or skip it.'], check=False, timeout=8)
+    except FileNotFoundError:
+        pass
 
 
 RECENT_DEPTH = 10  # how far Back / Recent reach

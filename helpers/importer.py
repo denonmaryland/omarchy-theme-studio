@@ -69,7 +69,10 @@ def say(msg):
 
 def run(*args, timeout=180, cwd=None):
     env = dict(os.environ, GIT_TERMINAL_PROMPT='0')
-    r = subprocess.run(args, text=True, capture_output=True, timeout=timeout, cwd=cwd, env=env)
+    try:
+        r = subprocess.run(args, text=True, capture_output=True, timeout=timeout, cwd=cwd, env=env)
+    except FileNotFoundError:
+        raise Fail(f'{args[0]} is not installed') from None
     if r.returncode:
         raise Fail((r.stderr or r.stdout or f'{args[0]} failed').strip()[-300:])
     return r.stdout.strip()
@@ -764,8 +767,11 @@ def thumb(slug):
     src = (root / 'preview.png') if (root / 'preview.png').is_file() else (bgs[0] if bgs else None)
     if src:
         THUMBS.mkdir(parents=True, exist_ok=True)
-        subprocess.run(['magick', str(src) + '[0]', '-resize', '360x220^', '-gravity', 'center', '-extent', '360x220',
-                        '-quality', '82', str(THUMBS / f'{slug}.jpg')], capture_output=True, timeout=60)
+        try:
+            subprocess.run(['magick', str(src) + '[0]', '-resize', '360x220^', '-gravity', 'center', '-extent', '360x220',
+                            '-quality', '82', str(THUMBS / f'{slug}.jpg')], capture_output=True, timeout=60)
+        except FileNotFoundError:
+            pass
 
 
 def finish(slug, how, apply, display='', source='', profile=''):
