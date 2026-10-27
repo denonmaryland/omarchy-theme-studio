@@ -718,7 +718,7 @@ def public(data):
     result['seconds_remaining'] = max(0, int(data['next_at'] - time.time())) if data['enabled'] else None
     result['background'] = str((HOME / '.local/state/omarchy/current/background').resolve(strict=False))
     images = theme_backgrounds()
-    result['backgrounds'] = [{'path': str(p), 'url': p.as_uri(), 'name': p.stem} for p in images]
+    result['backgrounds'] = [{'path': str(p), 'url': background_url(result['current'], p), 'name': p.stem} for p in images]
     result['background_index'] = next((i for i, p in enumerate(images) if str(p) == result['background']), -1)
     result['variant_target'] = variant_of(result['current'])
     base = result['variant_target'].removesuffix('-light')
@@ -784,6 +784,16 @@ def theme_backgrounds():
     images = sorted(p for folder in roots if folder.is_dir() for p in folder.iterdir()
                     if p.is_file() and p.suffix.lower() in ('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'))
     return list(dict.fromkeys(p.resolve() for p in images))
+
+
+def background_url(theme, path):
+    """Thumbnail URL that survives a theme switch: Omarchy replaces
+    current/theme on every switch, so prefer the theme's own copy."""
+    folder = theme_dir(theme)
+    stable = folder / 'backgrounds' / path.name if folder else None
+    if stable and stable.is_file() and not stable.is_symlink():
+        return stable.resolve().as_uri()
+    return path.as_uri()
 
 
 def select_background(value, step=False):

@@ -88,8 +88,8 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
 - [x] Polish from the walkthrough fixed: review card no longer shifts the grid
       under the pointer; Surprise me no longer asks for a rotation review; hero
       label readable with dark accents.
-- [ ] Polish still open: background thumbnails briefly point at the replaced
-      `current/theme/backgrounds` after a switch (7 "Cannot open" warnings once).
+- [x] Background thumbnails load from the theme's own folder, so a switch no
+      longer leaves them pointing at the replaced `current/theme/backgrounds`.
 - [ ] Retake preview.png from the final UI.
 - [ ] Prepare promo video/screenshots with licensed assets and no private desktop data.
 - [ ] After review: make public and submit.

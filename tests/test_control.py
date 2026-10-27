@@ -45,5 +45,38 @@ class RotationReviewTests(unittest.TestCase):
         self.assertEqual(result['pending_review'], 'picked')
 
 
+class BackgroundUrlTests(unittest.TestCase):
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory(prefix='theme-studio-control-')
+        self.addCleanup(tmp.cleanup)
+        self.root = Path(tmp.name)
+        self.live = self.root / 'themes'
+        self.current = self.root / 'current/theme/backgrounds'
+        for folder in (self.live / 'dusk/backgrounds', self.current):
+            folder.mkdir(parents=True)
+        for name, value in {'LIVE_THEMES': self.live, 'STOCK_THEMES': self.root / 'stock'}.items():
+            p = patch.object(control, name, value)
+            p.start()
+            self.addCleanup(p.stop)
+
+    def test_thumbnail_points_at_the_themes_own_copy(self):
+        (self.live / 'dusk/backgrounds/1.png').write_bytes(b'x')
+        (self.current / '1.png').write_bytes(b'x')
+        url = control.background_url('dusk', self.current / '1.png')
+        self.assertEqual(url, (self.live / 'dusk/backgrounds/1.png').as_uri())
+
+    def test_falls_back_when_only_the_current_copy_exists(self):
+        (self.current / 'generated.png').write_bytes(b'x')
+        url = control.background_url('dusk', self.current / 'generated.png')
+        self.assertEqual(url, (self.current / 'generated.png').as_uri())
+
+    def test_does_not_follow_a_symlinked_copy(self):
+        (self.root / 'elsewhere.png').write_bytes(b'x')
+        (self.live / 'dusk/backgrounds/2.png').symlink_to(self.root / 'elsewhere.png')
+        (self.current / '2.png').write_bytes(b'x')
+        url = control.background_url('dusk', self.current / '2.png')
+        self.assertEqual(url, (self.current / '2.png').as_uri())
+
+
 if __name__ == '__main__':
     unittest.main()
