@@ -103,5 +103,8 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
 - [x] Background thumbnails load from the theme's own folder, so a switch no
       longer leaves them pointing at the replaced `current/theme/backgrounds`.
 - [x] Retake preview.png from the final UI (2026-10-27, wide panel, live QML of 3a477cd).
-- [ ] Prepare promo video/screenshots with licensed assets and no private desktop data.
+- [x] README media (2026-10-27): banner, demo GIF recorded live on an empty
+      workspace (Follow-the-sun times blurred), compact/Discover/wide screenshots
+      over the wallpaper; preview.png is the compact panel on a full desktop.
+      Social carousel and MP4 kept outside the repo.
 - [ ] After review: make public and submit.

@@ -1,35 +1,22 @@
-# Best Theme Plugin Ever for Omarchy
+<p align="center">
+  <img src="docs/images/banner.png" alt="best theme plugin ever: every Omarchy theme, one click from your bar">
+</p>
 
-A bar panel for everything themes. Browse and apply your installed themes
-instantly, discover community themes, install a theme from a pasted link, rotate
-themes on a timer or with the sun, pick wallpapers, color your window borders per
-theme, and step back through the themes you used recently.
+<p align="center">
+  <b>A theme panel for the <a href="https://omarchy.org">Omarchy</a> bar.</b><br>
+  Browse and apply themes instantly, discover community themes, install from any link,<br>
+  rotate on a timer or with the sun, and pick wallpapers and border colors per theme.
+</p>
 
-![Best Theme Plugin Ever](preview.png)
+<p align="center">
+  <a href="#install"><img alt="Omarchy plugin" src="https://img.shields.io/badge/omarchy-plugin-7aa2f7?style=flat-square&labelColor=1a1b26"></a>
+  <img alt="Quickshell" src="https://img.shields.io/badge/quickshell-qml-9ece6a?style=flat-square&labelColor=1a1b26">
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-bb9af7?style=flat-square&labelColor=1a1b26"></a>
+</p>
 
-## Features
+![Clicking through themes in the panel: the whole desktop re-themes with each click](docs/images/demo.gif)
 
-- **Instant switching.** Click any theme; the panel updates immediately and the
-  last click always wins, so rapid clicking never gets stuck.
-- **Installed · Recent · Discover.** Light/dark filters, favorites, search, and
-  lookalike grouping (near-identical themes stack into one tile).
-- **Back button.** Step back through your last 10 themes, including ones the
-  rotation timer or Surprise me picked. Each theme comes back with the wallpaper
-  you last used with it.
-- **Install from a link.** Paste a GitHub repo, a theme page, a zip/tar archive,
-  an image, or a local folder. Images become a full generated theme, with six
-  palette styles to choose from.
-- **Rotation.** Change theme every 15/30/60 minutes and rate each new one with
-  Keep / Maybe / Not for me. **Follow the sun** switches to light themes at
-  sunrise and dark at sunset, computed locally from your time zone.
-- **Wallpapers.** Pick between a theme's wallpapers, shuffle them, or find more
-  openly licensed images (Openverse). Credits are saved next to each download.
-- **Window borders.** Pick a border color from the theme's palette, or turn the
-  border off for every theme.
-- **Compact panel or wide window** (button or `E`).
-
-Keyboard: `/` search · arrows browse · `Enter` apply · `B` back · `E` expand ·
-`1` `2` `3` tabs · `F` favorite · `Esc` close.
+<sub>Recorded on Omarchy with the optional denon.bar glass bar. On the stock bar the same panel opens in Omarchy's standard popup.</sub>
 
 ## Install
 
@@ -38,6 +25,46 @@ omarchy plugin add https://github.com/denonmaryland/omarchy-theme-studio --enabl
 ```
 
 Then click the palette icon in the bar.
+
+## A look around
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/compact.webp" alt="The compact panel over the Aetheria theme"></td>
+    <td width="50%"><img src="docs/images/discover.webp" alt="Discover: community themes with an Install and apply button"></td>
+  </tr>
+  <tr>
+    <td><b>Compact panel.</b> Opens from the bar. Click a theme and the whole desktop follows; the last click always wins.</td>
+    <td><b>Discover.</b> 260+ community themes, or paste any link: a GitHub repo, an archive, a theme page, an image.</td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="docs/images/wide.webp" alt="The wide window over the Archwave theme"></td>
+  </tr>
+  <tr>
+    <td colspan="2"><b>Wide window.</b> Press <code>E</code> for a bigger gallery with the controls alongside.</td>
+  </tr>
+</table>
+
+## Features
+
+- **Instant switching.** The panel updates the moment you click, and rapid clicking never gets stuck.
+- **Installed · Recent · Discover.** Light/dark filters, favorites, search, and lookalike grouping
+  (near-identical themes stack into one tile).
+- **Back button.** Step back through your last 10 themes, each with the wallpaper you last used with it.
+- **Install from a link.** GitHub repos, theme pages, zip/tar archives, images or a local folder.
+  Images become a full generated theme, with six palette styles to choose from.
+- **Rotation.** A new theme every 15, 30 or 60 minutes, with Keep / Maybe / Not for me to tune the mix.
+  **Follow the sun** switches to light themes at sunrise and dark at sunset, computed locally.
+- **Wallpapers.** Pick between a theme's wallpapers, shuffle them, or find openly licensed images
+  on Openverse. Credits are saved next to each download.
+- **Window borders.** Pick a border color from the theme's palette, or turn borders off for every theme.
+
+| Key | Action | Key | Action |
+|---|---|---|---|
+| `/` | Search | `B` | Back |
+| arrows | Browse | `E` | Expand / compact |
+| `Enter` | Apply | `F` | Favorite |
+| `1` `2` `3` | Tabs | `Esc` | Close |
 
 ## Remove
 
@@ -60,7 +87,18 @@ Themes and wallpapers you installed through Best Theme Plugin Ever are normal Om
 themes and stay installed. Remove them in the panel (⋯ → Delete theme) or with
 `omarchy theme remove`.
 
-## What it changes on your system
+## Requirements
+
+Omarchy with the shell bar, which includes Python 3 and ImageMagick. `git`
+is needed for repository installs. Window border colors need Omarchy's Lua
+Hyprland config (`~/.config/hypr/hyprland.lua`).
+
+If the `denon.bar` glass bar plugin is installed, Best Theme Plugin Ever uses its
+animated panel host (hover to preview, click to keep). Otherwise it uses
+Omarchy's standard popup.
+
+<details>
+<summary><b>What it changes on your system</b></summary>
 
 Best Theme Plugin Ever runs inside the Omarchy shell. It doesn't install services or
 hooks, and it doesn't need root.
@@ -73,7 +111,10 @@ hooks, and it doesn't need root.
 | Adds `~/.config/hypr/theme_studio_border.lua` and one marked `require` line at the end of `~/.config/hypr/hyprland.lua` | Only after you press **Allow** in the window border picker. **⋯ → Remove system changes** removes both. |
 | Settings and history in `~/.local/state/omarchy-theme-studio/`; thumbnails and downloads in `~/.cache/omarchy-theme-studio/` | Always |
 
-## Network use
+</details>
+
+<details>
+<summary><b>Network use</b></summary>
 
 - **Discover** reads a community theme catalog and fetches preview images.
 - **Find more** (wallpapers) searches the Openverse API.
@@ -81,7 +122,10 @@ hooks, and it doesn't need root.
 
 There's no telemetry and no account.
 
-## Security notes
+</details>
+
+<details>
+<summary><b>Security notes</b></summary>
 
 Themes you install are code-adjacent: Omarchy can load a theme's `hyprland.lua`,
 `neovim.lua` and terminal configs. Omarchy itself refuses those files from themes
@@ -103,17 +147,10 @@ it installs without `.git` (archives, web pages, repository subfolders, folders)
 Repository installs fetch the repository's current version, which is whatever
 its author has published. Only install themes you trust.
 
-## Requirements
+</details>
 
-Omarchy with the shell bar, which includes Python 3 and ImageMagick. `git`
-is needed for repository installs. Window border colors need Omarchy's Lua
-Hyprland config (`~/.config/hypr/hyprland.lua`).
-
-If the `denon.bar` glass bar plugin is installed, Best Theme Plugin Ever uses its
-animated panel host (hover to preview, click to keep). Otherwise it uses
-Omarchy's standard popup.
-
-## Development checks
+<details>
+<summary><b>Development checks</b></summary>
 
 ```bash
 python3 -m unittest discover -s tests -v
@@ -129,6 +166,8 @@ they do not replace a live mouse walkthrough or short-screen layout checks.
 Release preparation and outstanding live checks are tracked in
 [the marketplace checklist](docs/RELEASE-CHECKLIST.md).
 
+</details>
+
 ## License
 
-MIT
+MIT. Themes and wallpapers shown in the screenshots belong to their creators.
