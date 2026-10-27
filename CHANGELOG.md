@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.0 (2026-10-27)
 
 First standalone version, prepared for the Omarchy plugin marketplace, under the
 name Best Theme Plugin Ever (plugin ID `io.github.denonmaryland.theme-studio`).
