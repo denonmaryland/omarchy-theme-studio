@@ -9,7 +9,9 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
 - [x] `preview.png` at the root (panel-only screenshot; retake once the UI is final)
 - [x] LICENSE file (owner to choose; MIT is the common choice)
 - [x] README with install, removal, external dependencies (draft present)
-- [ ] Public GitHub repository (owner approval needed before publishing)
+- [x] Private GitHub repository: https://github.com/denonmaryland/omarchy-theme-studio
+- [ ] Make it public (owner approval). Before that, decide whether commits should show
+      the personal git email or the GitHub noreply address.
 
 ## Make it self-contained (blocking)
 - [x] Helpers: QML points at `~/.local/share/omarchy-theme-rotation/*.py`. Load them
@@ -60,4 +62,4 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
       (c4988a4); the test session's shell was lost to a harness mistake before re-check.
 - [ ] Code review (owner will use a different model).
 - [ ] Retake preview.png from the final UI.
-- [ ] Push to a private GitHub repo for review, then make public and submit.
+- [ ] After review: make public and submit.
