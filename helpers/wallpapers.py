@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Theme Studio wallpaper catalog: openly licensed wallpapers from Openverse.
+"""Best Theme Plugin Ever wallpaper catalog: openly licensed wallpapers from Openverse.
 
   wallpapers.py search [<query>] [--page N]
   wallpapers.py save <id> [--theme <slug>] [--apply]
@@ -314,7 +314,7 @@ def current_theme():
 
 def credit(folder, r, filename):
     path = folder / 'CREDITS.md'
-    head = '' if path.is_file() else '# Wallpaper credits\n\nOpenly licensed images saved by Theme Studio from Openverse.\n'
+    head = '' if path.is_file() else '# Wallpaper credits\n\nOpenly licensed images saved by Best Theme Plugin Ever from Openverse.\n'
     lic = license_label(r)
     url = str(r.get('license_url') or '')
     entry = (f'\n## {nice_title(r)}\n\n'

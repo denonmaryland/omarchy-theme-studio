@@ -1,4 +1,4 @@
--- Theme Studio: per-theme window border colour, picked in the panel.
+-- Best Theme Plugin Ever: per-theme window border colour, picked in the panel.
 -- Choices live in ~/.local/state/omarchy-theme-studio/borders.lua. Themes
 -- without a choice use the "*" default, or keep their own border if unset.
 -- omarchy theme set writes theme.name before it reloads Hyprland, so a switch

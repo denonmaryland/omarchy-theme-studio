@@ -7,7 +7,7 @@ import qs.Ui
 import qs.Commons
 import qs.Commons as Commons
 
-// Theme Studio: browse, apply and rotate themes, and install new ones from a
+// Best Theme Plugin Ever: browse, apply and rotate themes, and install new ones from a
 // pasted link (git repo, theme store page, archive, or images → generated theme).
 Panel {
   id: root
@@ -669,7 +669,7 @@ Panel {
     anchors.fill: parent
     bar: root.bar
     text: "󰏘"
-    tooltipText: "Theme Studio · rotation " + (root.values.enabled ? "on" : "paused")
+    tooltipText: "Best Theme Plugin Ever · rotation " + (root.values.enabled ? "on" : "paused")
     onPressed: if (!(popup && popup.commitHover(root))) root.toggle()
   }
 
@@ -2585,7 +2585,7 @@ Panel {
             width: parent.width; wrapMode: Text.WordWrap
             text: root.borderInfo.supported === false
               ? "Window borders need Omarchy's Lua Hyprland config (~/.config/hypr/hyprland.lua)."
-              : "To color window borders, Theme Studio adds one marked line to ~/.config/hypr/hyprland.lua and a small file next to it. Nothing else is changed, and ⋯ → Remove system changes takes both out again."
+              : "To color window borders, Best Theme Plugin Ever adds one marked line to ~/.config/hypr/hyprland.lua and a small file next to it. Nothing else is changed, and ⋯ → Remove system changes takes both out again."
             color: root.alphaOf(root.fg, 0.75); font.family: root.family; font.pixelSize: Style.font.body
           }
           PrimaryButton {

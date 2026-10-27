@@ -2,7 +2,8 @@
 
 ## 0.1.0 (unreleased)
 
-First standalone version, prepared for the Omarchy plugin marketplace.
+First standalone version, prepared for the Omarchy plugin marketplace, under the
+name Best Theme Plugin Ever (plugin ID `io.github.denonmaryland.theme-studio`).
 
 - Self-contained plugin folder: helpers live in `helpers/`. The panel uses
   Omarchy's stock popup, or the denon.bar glass host when that's installed.

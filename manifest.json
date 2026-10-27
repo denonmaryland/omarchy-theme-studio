@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "id": "io.github.denonmaryland.theme-studio",
-  "name": "Theme Studio",
+  "name": "Best Theme Plugin Ever",
   "version": "0.1.0",
   "author": "DeNon Maryland",
   "description": "Browse, apply, rotate and install Omarchy themes from the bar, with community discovery, wallpapers, per-theme window borders and a back button",
   "kinds": ["bar-widget"],
   "entryPoints": {"barWidget": "ThemeStudio.qml"},
-  "barWidget": {"displayName": "Theme Studio", "description": "Browse, apply and rotate themes", "category": "Appearance", "allowMultiple": false}
+  "barWidget": {"displayName": "Best Theme Plugin Ever", "description": "Browse, apply and rotate themes", "category": "Appearance", "allowMultiple": false}
 }

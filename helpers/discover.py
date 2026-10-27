@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Theme Studio discover: browse community Omarchy themes that are not installed yet.
+"""Best Theme Plugin Ever discover: browse community Omarchy themes that are not installed yet.
 
   discover.py list [--refresh]   catalog + install state, one JSON object
   discover.py thumbs [--limit N] cache preview thumbnails for catalog themes

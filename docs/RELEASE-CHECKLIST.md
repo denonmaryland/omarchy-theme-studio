@@ -6,6 +6,11 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
 ## Repository basics
 - [x] Own repository, `manifest.json` at the root
 - [x] Permanent ID `io.github.denonmaryland.theme-studio`, category Appearance
+- [x] Display name "Best Theme Plugin Ever" (2026-10-27): "Theme Studio" is already
+      listed by io.github.ofa14-prog.theme-studio (a theme designer). Internal
+      names (ID, IPC target, state/cache dirs, `.theme-studio` markers, the
+      `theme_studio_border` module) are unchanged; old border lines still match.
+- [x] Tags: bar, hyprland, quickshell.
 - [x] `preview.png` at the root (panel-only screenshot of the final UI)
 - [x] LICENSE file (owner to choose; MIT is the common choice)
 - [x] README with install, removal, external dependencies (draft present)

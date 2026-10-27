@@ -4,6 +4,7 @@ from pathlib import Path
 import tempfile
 import time
 import unittest
+import unittest.mock
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -76,6 +77,28 @@ class BackgroundUrlTests(unittest.TestCase):
         (self.current / '2.png').write_bytes(b'x')
         url = control.background_url('dusk', self.current / '2.png')
         self.assertEqual(url, (self.current / '2.png').as_uri())
+
+
+class BorderLineTests(unittest.TestCase):
+    OLD_LINE = 'require("hypr.theme_studio_border")  -- Theme Studio: window border colors (remove via the panel)'
+
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory(prefix='theme-studio-control-')
+        self.addCleanup(tmp.cleanup)
+        self.hypr = Path(tmp.name)
+        self.main = self.hypr / 'hyprland.lua'
+        for name, value in {'HYPR_DIR': self.hypr, 'subprocess': unittest.mock.MagicMock()}.items():
+            p = patch.object(control, name, value)
+            p.start()
+            self.addCleanup(p.stop)
+
+    def test_line_written_under_the_old_name_is_still_found_and_removed(self):
+        self.main.write_text('-- user config\nlocal keep = 1\n\n' + self.OLD_LINE + '\n')
+        (self.hypr / 'theme_studio_border.lua').write_text('-- module')
+        self.assertTrue(control.border_installed())
+        control.border_uninstall()
+        self.assertEqual(self.main.read_text(), '-- user config\nlocal keep = 1\n')
+        self.assertFalse((self.hypr / 'theme_studio_border.lua').exists())
 
 
 if __name__ == '__main__':

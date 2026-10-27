@@ -2,7 +2,7 @@ import QtQuick
 import qs.Ui
 import qs.Commons
 
-// Omarchy's stock popup card. Theme Studio reparents its content into `slot`.
+// Omarchy's stock popup card. Best Theme Plugin Ever reparents its content into `slot`.
 KeyboardPanel {
   id: host
   property var studio: null

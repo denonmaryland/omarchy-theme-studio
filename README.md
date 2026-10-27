@@ -1,11 +1,11 @@
-# Theme Studio for Omarchy
+# Best Theme Plugin Ever for Omarchy
 
 A bar panel for everything themes. Browse and apply your installed themes
 instantly, discover community themes, install a theme from a pasted link, rotate
 themes on a timer or with the sun, pick wallpapers, color your window borders per
 theme, and step back through the themes you used recently.
 
-![Theme Studio](preview.png)
+![Best Theme Plugin Ever](preview.png)
 
 ## Features
 
@@ -41,7 +41,7 @@ Then click the palette icon in the bar.
 
 ## Remove
 
-1. If you turned on window border colors, first open Theme Studio and choose
+1. If you turned on window border colors, first open Best Theme Plugin Ever and choose
    **⋯ → Remove system changes**. That removes the one line and file it added
    (see below).
 2. Remove the plugin:
@@ -56,13 +56,13 @@ Then click the palette icon in the bar.
    rm -rf ~/.local/state/omarchy-theme-studio ~/.cache/omarchy-theme-studio
    ```
 
-Themes and wallpapers you installed through Theme Studio are normal Omarchy
+Themes and wallpapers you installed through Best Theme Plugin Ever are normal Omarchy
 themes and stay installed. Remove them in the panel (⋯ → Delete theme) or with
 `omarchy theme remove`.
 
 ## What it changes on your system
 
-Theme Studio runs inside the Omarchy shell. It doesn't install services or
+Best Theme Plugin Ever runs inside the Omarchy shell. It doesn't install services or
 hooks, and it doesn't need root.
 
 | What | When |
@@ -85,7 +85,7 @@ There's no telemetry and no account.
 
 Themes you install are code-adjacent: Omarchy can load a theme's `hyprland.lua`,
 `neovim.lua` and terminal configs. Omarchy itself refuses those files from themes
-that keep their `.git` folder. Theme Studio applies the same rule to every theme
+that keep their `.git` folder. Best Theme Plugin Ever applies the same rule to every theme
 it installs without `.git` (archives, web pages, repository subfolders, folders):
 
 - `*.lua`, `alacritty.toml`, `foot.ini`, `ghostty.conf`, `kitty.conf` and
@@ -109,7 +109,7 @@ Omarchy with the shell bar, which includes Python 3 and ImageMagick. `git`
 is needed for repository installs. Window border colors need Omarchy's Lua
 Hyprland config (`~/.config/hypr/hyprland.lua`).
 
-If the `denon.bar` glass bar plugin is installed, Theme Studio uses its
+If the `denon.bar` glass bar plugin is installed, Best Theme Plugin Ever uses its
 animated panel host (hover to preview, click to keep). Otherwise it uses
 Omarchy's standard popup.
 
