@@ -29,7 +29,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 HOME = Path.home()
-CACHE = HOME / '.cache/omarchy-theme-rotation/wallpapers'
+CACHE = HOME / '.cache/omarchy-theme-studio/wallpapers'
 SEARCH_CACHE = CACHE / 'search'
 THUMBS = CACHE / 'thumbs'
 BACKGROUNDS = HOME / '.config/omarchy/backgrounds'

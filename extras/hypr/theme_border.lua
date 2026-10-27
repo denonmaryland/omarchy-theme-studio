@@ -1,10 +1,10 @@
 -- Theme Studio: per-theme window border colour, picked in the panel.
--- Choices live in ~/.local/state/omarchy-theme-rotation/borders.lua. Themes
+-- Choices live in ~/.local/state/omarchy-theme-studio/borders.lua. Themes
 -- without a choice use the "*" default, or keep their own border if unset.
 -- omarchy theme set writes theme.name before it reloads Hyprland, so a switch
 -- picks up the override in that reload.
 local home = os.getenv("HOME")
-local ok, borders = pcall(dofile, home .. "/.local/state/omarchy-theme-rotation/borders.lua")
+local ok, borders = pcall(dofile, home .. "/.local/state/omarchy-theme-studio/borders.lua")
 if not ok or type(borders) ~= "table" then return end
 
 local file = io.open(home .. "/.local/state/omarchy/current/theme.name")

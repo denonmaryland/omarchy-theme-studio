@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""Rotate installed Omarchy themes and remove unwanted ones."""
+"""Theme Studio backend: switch, rotate, rate, remember and remove Omarchy themes."""
 import argparse
 import fcntl
 import json
@@ -13,13 +13,18 @@ import tempfile
 import time
 
 HOME = Path.home()
-STATE_DIR = Path(os.environ.get('OMARCHY_ROTATION_STATE', HOME / '.local/state/omarchy-theme-rotation'))
+STATE_DIR = Path(os.environ.get('THEME_STUDIO_STATE', HOME / '.local/state/omarchy-theme-studio'))
 STATE_FILE = STATE_DIR / 'state.json'
-GALLERY = Path(os.environ.get('OMARCHY_ROTATION_GALLERY', HOME / '.local/share/omarchy-community-themes/manifest.json'))
+LEGACY_STATE = HOME / '.local/state/omarchy-theme-rotation'  # pre-release name
+PLUGIN_DIR = Path(__file__).resolve().parent.parent
+HYPR_DIR = HOME / '.config/hypr'
+BORDER_MODULE = 'theme_studio_border'
+BORDER_LINE = f'require("hypr.{BORDER_MODULE}")  -- Theme Studio: window border colors (remove via the panel)'
+GALLERY = Path(os.environ.get('THEME_STUDIO_GALLERY', HOME / '.local/share/omarchy-community-themes/manifest.json'))
 LIVE_THEMES = HOME / '.config/omarchy/themes'
 STOCK_THEMES = Path('/usr/share/omarchy/themes')
 MINUTES = (15, 30, 60)
-THUMBS = HOME / '.cache/omarchy-theme-rotation/thumbs'
+THUMBS = HOME / '.cache/omarchy-theme-studio/thumbs'
 PALETTES = STATE_DIR / 'palettes.json'
 IMAGE_EXT = ('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp')
 
@@ -721,7 +726,8 @@ def public(data):
     options = border_options(result['current'])
     fallback = data.get('border_default') or 'theme'
     choice = (data.get('borders') or {}).get(result['current'], fallback)
-    result['border'] = {'choice': choice, 'global': fallback, 'options': options, 'default': live_border()}
+    result['border'] = {'choice': choice, 'global': fallback, 'options': options, 'default': live_border(),
+                        'installed': border_installed(), 'supported': border_supported()}
     sun = sun_info(data)
     learned = data.get('sun_themes') or {}
     display = labels()
@@ -835,7 +841,7 @@ def change(data, selected=None):
 def open_review():
     for _ in range(5):
         try:
-            command('omarchy-shell', 'denon.theme-rotation', 'review', timeout=8)
+            command('omarchy-shell', 'io.github.denonmaryland.theme-studio', 'review', timeout=8)
             return
         except Exception:
             time.sleep(1)
@@ -843,6 +849,72 @@ def open_review():
 
 
 RECENT_DEPTH = 10  # how far Back / Recent reach
+HISTORY_KEEP = 20
+
+
+def migrate_legacy():
+    """One-time copy of state from the pre-release plugin name."""
+    if STATE_DIR.exists() or not LEGACY_STATE.is_dir():
+        return
+    shutil.copytree(LEGACY_STATE, STATE_DIR, ignore=shutil.ignore_patterns('*.lock', '.pending-*'))
+
+
+def note_history(theme=None):
+    """Append the current theme to Recent history (newest last, no repeats)."""
+    theme = theme or current_theme()
+    if not theme:
+        return
+    path = STATE_DIR / 'history'
+    try:
+        names = path.read_text().split()
+    except OSError:
+        names = []
+    if names and names[-1] == theme:
+        return
+    names = [n for n in names if n != theme][-(HISTORY_KEEP - 1):] + [theme]
+    pending = path.with_suffix('.pending')
+    pending.write_text('\n'.join(names) + '\n')
+    os.replace(pending, path)
+
+
+def border_installed():
+    try:
+        return BORDER_LINE.split('  --')[0] in (HYPR_DIR / 'hyprland.lua').read_text()
+    except OSError:
+        return False
+
+
+def border_supported():
+    return (HYPR_DIR / 'hyprland.lua').is_file()
+
+
+def border_install():
+    """Add the border override (one file + one marked line). Only on explicit consent."""
+    if not border_supported():
+        raise RuntimeError('Window borders need the Lua Hyprland config (~/.config/hypr/hyprland.lua)')
+    shutil.copyfile(PLUGIN_DIR / 'extras/hypr/theme_border.lua', HYPR_DIR / f'{BORDER_MODULE}.lua')
+    if not border_installed():
+        main = HYPR_DIR / 'hyprland.lua'
+        text = main.read_text()
+        main.write_text(text + ('' if text.endswith('\n') else '\n') + '\n' + BORDER_LINE + '\n')
+    subprocess.run(['hyprctl', 'reload'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
+
+
+def border_uninstall():
+    """Remove exactly what border_install added."""
+    main = HYPR_DIR / 'hyprland.lua'
+    try:
+        lines = main.read_text().splitlines(keepends=True)
+    except OSError:
+        lines = None
+    if lines is not None:
+        kept = [l for l in lines if not l.strip().startswith(BORDER_LINE.split('  --')[0])]
+        while kept and kept[-1].strip() == '' and len(kept) < len(lines):
+            kept.pop()
+        if kept != lines:
+            main.write_text(''.join(kept))
+    (HYPR_DIR / f'{BORDER_MODULE}.lua').unlink(missing_ok=True)
+    subprocess.run(['hyprctl', 'reload'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=10)
 
 
 def recent_themes(current, installed):
@@ -924,16 +996,25 @@ def studio_theme(name):
 
 
 def execute(action, value=None):
+    migrate_legacy()
     STATE_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
     changed = False
     with (STATE_DIR / 'operation.lock').open('w') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         data = load()
         now = time.time()
-        if action == 'state':
+        note_history()
+        if action in ('state', 'note'):
             return public(data)
         if action == 'thumbs':
             return {'made': make_thumbs()}
+        instance = os.environ.get('HYPRLAND_INSTANCE_SIGNATURE', '')
+        if action == 'tick' and data.get('session') != instance:
+            # New desktop session: restart the countdown (the shell drives ticks).
+            data['session'] = instance
+            data['next_at'] = now + data['interval_minutes'] * 60
+            atomic(data)
+            return public(data)
         if action == 'tick' and sun_tick(data, now):
             atomic(data)
             return public(data)
@@ -982,7 +1063,13 @@ def execute(action, value=None):
                 change(data, selected=value)
                 data['pending_review'] = None
             learn_theme(data, value)
+        elif action == 'border-install':
+            border_install()
+        elif action == 'cleanup':
+            border_uninstall()
         elif action == 'border':
+            if not border_installed():
+                raise PermissionError('Allow the window border change first')
             theme = current_theme()
             borders = data.setdefault('borders', {})
             value = 'theme' if value == 'default' else value
@@ -994,6 +1081,8 @@ def execute(action, value=None):
                 borders[theme] = value
             write_borders(data)
         elif action == 'border-default':
+            if not border_installed():
+                raise PermissionError('Allow the window border change first')
             if value not in ('theme', 'none'):
                 raise ValueError('Choose theme or none')
             data['border_default'] = value  # explicit per-theme picks still win
@@ -1091,7 +1180,7 @@ def daemon():
 def main():
     os.umask(0o077)
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('state', 'thumbs', 'hide-current', 'unhide-all', 'variant', 'toggle', 'interval', 'background-mode', 'background-next', 'background-step', 'background-set', 'theme-select', 'favorite', 'border', 'border-default', 'sun-toggle', 'sun-location', 'rate', 'remove-current', 'random', 'tick', 'daemon'))
+    parser.add_argument('action', choices=('state', 'thumbs', 'hide-current', 'unhide-all', 'variant', 'toggle', 'interval', 'background-mode', 'background-next', 'background-step', 'background-set', 'theme-select', 'favorite', 'border', 'border-default', 'border-install', 'cleanup', 'note', 'sun-toggle', 'sun-location', 'rate', 'remove-current', 'random', 'tick', 'daemon'))
     parser.add_argument('value', nargs='?')
     args = parser.parse_args()
     if args.action == 'daemon':
@@ -1104,5 +1193,5 @@ if __name__ == '__main__':
     try:
         main()
     except Exception as exc:
-        print('theme-rotation:', exc, file=sys.stderr)
+        print('theme-studio:', exc, file=sys.stderr)
         sys.exit(1)

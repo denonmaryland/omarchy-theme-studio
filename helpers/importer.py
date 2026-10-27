@@ -41,7 +41,7 @@ from pathlib import Path
 HOME = Path.home()
 THEMES = HOME / '.config/omarchy/themes'
 STOCK = Path('/usr/share/omarchy/themes')
-THUMBS = HOME / '.cache/omarchy-theme-rotation/thumbs'
+THUMBS = HOME / '.cache/omarchy-theme-studio/thumbs'
 UA = 'Mozilla/5.0 (X11; Linux x86_64) OmarchyThemeStudio/1.0'
 IMAGE_EXT = ('.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.avif', '.heic', '.tif', '.tiff', '.jxl')
 KEEP_EXT = ('.jpg', '.jpeg', '.png', '.webp')
