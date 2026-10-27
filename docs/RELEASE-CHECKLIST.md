@@ -82,8 +82,9 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
       was verified with real clicks: the review card held still through three
       picks 1.2 s apart (each landed on its target), buttons disabled while
       stale, collapse once the pointer left the grid; Surprise me shows no
-      review; hero label readable on Hinterlands. Still open: failed-update and
-      failed-switch paths (test-only), Random→Random on the new QML, stock host.
+      review; hero label readable on Hinterlands; Surprise me clicked twice
+      150 ms apart applied two random themes in order (de2b245). Still open:
+      failed-update and failed-switch paths (test-only), stock host.
 - [x] Polish from the walkthrough fixed: review card no longer shifts the grid
       under the pointer; Surprise me no longer asks for a rotation review; hero
       label readable with dark accents.
