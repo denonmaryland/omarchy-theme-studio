@@ -498,6 +498,13 @@ Panel {
     target: "io.github.denonmaryland.theme-studio"
     function open(): void { root.open(); root.refresh() }
     function close(): void { root.close() }
+    // Development aid: swap the popup host live ("stock" or "glass").
+    function host(kind: string): string {
+      root.close()
+      root.useGlassHost = kind === "glass"
+      hostLoader.setSource(root.useGlassHost ? "hosts/GlassHost.qml" : "hosts/StockHost.qml", { studio: root, anchorItem: icon, bar: root.bar })
+      return root.useGlassHost ? "glass" : "stock"
+    }
     function border(): void { root.open(); root.refresh(); root.menuOpen = false; root.borderOpen = true }
     function review(): void { root.open(); root.refresh() }
     function state(): string { return JSON.stringify(root.values) }
@@ -2536,7 +2543,7 @@ Panel {
         }
         Flow {
           id: swatchFlow
-          visible: root.borderInfo.installed
+          visible: !!root.borderInfo.installed
           width: parent.width
           spacing: Style.space(8)
           readonly property real cell: (width - spacing * 5) / 6
@@ -2581,7 +2588,7 @@ Panel {
           }
         }
         Row {
-          visible: root.borderInfo.installed
+          visible: !!root.borderInfo.installed
           width: parent.width
           spacing: Style.space(6)
           readonly property real cell: (width - spacing) / 2
@@ -2612,9 +2619,9 @@ Panel {
             }
           }
         }
-        Rectangle { visible: root.borderInfo.installed; width: parent.width; height: 1; color: root.alphaOf(root.fg, 0.08) }
+        Rectangle { visible: !!root.borderInfo.installed; width: parent.width; height: 1; color: root.alphaOf(root.fg, 0.08) }
         Item {
-          visible: root.borderInfo.installed
+          visible: !!root.borderInfo.installed
           width: parent.width
           height: Math.max(globalText.implicitHeight, globalSwitch.height)
           Column {
