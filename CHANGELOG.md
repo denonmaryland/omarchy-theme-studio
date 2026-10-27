@@ -19,5 +19,9 @@ First standalone version, prepared for the Omarchy plugin marketplace.
   by converting `alacritty.toml` before removing executable settings.
 - Failed theme switches preserve newer queued selections, including a repeated
   random pick.
+- Surprise me no longer asks to review the pick as if it had rotated in.
+- The rotation review card no longer appears or disappears under the pointer:
+  it waits while picks are landing or the pointer is over a grid.
+- The hero label stays readable on themes with dark accent colors.
 - Regression checks cover importer failures, legacy palette extraction and
   queued switching behavior.

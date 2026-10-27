@@ -1158,6 +1158,8 @@ def execute(action, value=None):
                 data['last_error'] = str(exc)
                 atomic(data)
                 raise
+            if action == 'random':
+                data['pending_review'] = None  # a picked surprise is not a rotation to review
         elif action != 'tick':
             raise ValueError('Unknown action')
         atomic(data)

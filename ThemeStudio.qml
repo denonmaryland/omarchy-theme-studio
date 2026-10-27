@@ -153,6 +153,25 @@ Panel {
   readonly property bool reviewing: !!values.pending_review && values.pending_review === values.current
 
   function alphaOf(c, a) { return Qt.rgba(c.r, c.g, c.b, a) }
+  function luminance(c) {
+    const lin = v => v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)
+    return 0.2126 * lin(c.r) + 0.7152 * lin(c.g) + 0.0722 * lin(c.b)
+  }
+  // The review card sits above the grids, so showing or hiding it moves every
+  // tile. Hold it while picks land or the pointer is over a grid; it settles
+  // once the pointer leaves or the panel closes.
+  property bool reviewShown: false
+  property string reviewSlug: ""
+  property string reviewName: ""
+  readonly property bool holdReview: switching || gridHover.hovered || discoverHover.hovered || wallHover.hovered
+  readonly property bool canRate: reviewing && !switching && values.pending_review === reviewSlug
+  function syncReview() {
+    if (opened && holdReview) return
+    reviewShown = reviewing
+    if (reviewing) { reviewSlug = values.pending_review; reviewName = values.current_name || "" }
+  }
+  onReviewingChanged: syncReview()
+  onHoldReviewChanged: syncReview()
 
   function isLink(text) {
     let parts = String(text || "").trim().split(/\s+/).filter(p => p.length)
@@ -459,6 +478,7 @@ Panel {
     onLoaded: root.expanded = text().trim() === "wide"
   }
   onOpenedChanged: {
+    syncReview()
     if (opened) {
       refresh()
       if (!thumbsProc.running) thumbsProc.running = true
@@ -1008,8 +1028,9 @@ Panel {
           anchors.right: heroChips.left
           spacing: Style.space(4)
           Text {
-            text: root.reviewing ? "JUST ROTATED IN" : "CURRENT THEME"
-            color: root.accent
+            text: root.reviewing && root.shownCurrent === root.values.pending_review ? "JUST ROTATED IN" : "CURRENT THEME"
+            // Dark accents (common in light themes) vanish on the shaded artwork.
+            color: root.luminance(root.accent) < 0.2 ? "#fff7e3" : root.accent
             font.family: root.family; font.pixelSize: Style.font.caption + 1
             font.weight: Font.DemiBold; font.letterSpacing: 0.8
           }
@@ -1073,7 +1094,7 @@ Panel {
 
       // ---- New theme review (after an automatic rotation)
       Rectangle {
-        visible: root.reviewing
+        visible: root.reviewShown
         width: parent.width
         height: reviewCol.implicitHeight + Style.space(24)
         radius: Style.space(12)
@@ -1087,7 +1108,7 @@ Panel {
           spacing: Style.space(10)
           Text {
             width: parent.width
-            text: "Keep " + root.values.current_name + " in the rotation?"
+            text: "Keep " + root.reviewName + " in the rotation?"
             color: root.fg; elide: Text.ElideRight
             font.family: root.family; font.pixelSize: Style.font.body + 1; font.weight: Font.DemiBold
           }
@@ -1095,9 +1116,9 @@ Panel {
             width: parent.width
             spacing: Style.space(6)
             readonly property real cell: (width - spacing * 2) / 3
-            PrimaryButton { width: parent.cell; height: Style.space(32); glyph: "󰄬"; label: "Keep"; enabledState: !root.busy; onClicked: root.act("rate", "yes") }
-            GhostButton { width: parent.cell; height: Style.space(32); label: "Maybe"; enabledState: !root.busy; onClicked: root.act("rate", "maybe") }
-            GhostButton { width: parent.cell; height: Style.space(32); glyph: "󰅖"; label: "Not for me"; enabledState: !root.busy; onClicked: root.act("rate", "no") }
+            PrimaryButton { width: parent.cell; height: Style.space(32); glyph: "󰄬"; label: "Keep"; enabledState: !root.busy && root.canRate; onClicked: root.act("rate", "yes") }
+            GhostButton { width: parent.cell; height: Style.space(32); label: "Maybe"; enabledState: !root.busy && root.canRate; onClicked: root.act("rate", "maybe") }
+            GhostButton { width: parent.cell; height: Style.space(32); glyph: "󰅖"; label: "Not for me"; enabledState: !root.busy && root.canRate; onClicked: root.act("rate", "no") }
           }
         }
       }
@@ -1469,13 +1490,14 @@ Panel {
         // ---- Grid
         GridView {
           id: grid
+          HoverHandler { id: gridHover }
           visible: !root.linkMode && root.themeScope !== "discover"
           width: parent.width
           readonly property real thumbH: Math.round((width / root.gridCols - Style.space(9)) * 0.62)
           // Room for the pile on top-row lookalike stacks.
           topMargin: Style.space(4)
           height: root.expanded ? Math.max(Style.space(200), rightPane.height - y)
-                                : root.fitted(Math.min(contentHeight + topMargin, (thumbH + Style.space(46)) * (root.reviewing ? 2 : 3)), Style.space(96))
+                                : root.fitted(Math.min(contentHeight + topMargin, (thumbH + Style.space(46)) * (root.reviewShown ? 2 : 3)), Style.space(96))
           cellWidth: width / root.gridCols
           cellHeight: thumbH + Style.space(46)
           clip: true
@@ -1774,6 +1796,7 @@ Panel {
 
           GridView {
             id: discoverGrid
+            HoverHandler { id: discoverHover }
             visible: root.discoverModel.length > 0
             width: parent.width
             readonly property real thumbH: Math.round((width / root.gridCols - Style.space(9)) * 0.62)
@@ -2126,6 +2149,7 @@ Panel {
 
           GridView {
             id: wallGrid
+            HoverHandler { id: wallHover }
             visible: root.wallResults.length > 0
             width: parent.width
             readonly property int cols: root.expanded ? 3 : 2

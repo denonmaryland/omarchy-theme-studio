@@ -72,6 +72,23 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
       and five Node tests pass; each new test fails on the old code. Still
       uncommitted and undeployed.
 - [ ] Live regression check of those fixes on the release candidate.
+      2026-10-26, glass bar host. Python helper changes take effect at once:
+      live Git update of `futurism` staged only in `~/.config/omarchy/`, nothing
+      in the themes folder, cleaned up after; live legacy folder import produced
+      `colors.toml`, stripped `alacritty.toml` and its launch command (not run).
+      QML changes did NOT load via hot reload or `rescanPlugins` for this
+      widget; the first pointer walkthrough therefore ran pre-fix QML (success
+      paths only). After `omarchy restart shell` (23:40) the working-tree QML
+      was verified with real clicks: the review card held still through three
+      picks 1.2 s apart (each landed on its target), buttons disabled while
+      stale, collapse once the pointer left the grid; Surprise me shows no
+      review; hero label readable on Hinterlands. Still open: failed-update and
+      failed-switch paths (test-only), Random→Random on the new QML, stock host.
+- [x] Polish from the walkthrough fixed: review card no longer shifts the grid
+      under the pointer; Surprise me no longer asks for a rotation review; hero
+      label readable with dark accents.
+- [ ] Polish still open: background thumbnails briefly point at the replaced
+      `current/theme/backgrounds` after a switch (7 "Cannot open" warnings once).
 - [ ] Retake preview.png from the final UI.
 - [ ] Prepare promo video/screenshots with licensed assets and no private desktop data.
 - [ ] After review: make public and submit.
