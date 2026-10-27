@@ -19,5 +19,5 @@ KeyboardPanel {
   contentHeight: studio && studio.expanded ? host.fittedContentHeight(Style.space(740), Style.space(740))
                                            : host.fittedContentHeight(studio ? studio.contentImplicitHeight : 0, Style.space(880))
 
-  Item { id: slotItem; anchors.fill: parent }
+  Item { id: slotItem; anchors.fill: parent; clip: true }
 }

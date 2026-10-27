@@ -697,7 +697,7 @@ def load():
             data.setdefault(key, json.loads(json.dumps(value)))
         return data
     return {**json.loads(json.dumps(SUN_DEFAULTS)), 
-        'enabled': True, 'interval_minutes': 15, 'shuffle_background': False,
+        'enabled': False, 'interval_minutes': 15, 'shuffle_background': False,
         'next_at': now + 900, 'pool': [], 'ratings': {}, 'favorites': [], 'pending_review': None,
         'current': current_theme(), 'last_change': None, 'last_error': '',
         'session': os.environ.get('HYPRLAND_INSTANCE_SIGNATURE', ''),

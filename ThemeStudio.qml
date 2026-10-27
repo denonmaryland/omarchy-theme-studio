@@ -900,6 +900,20 @@ Panel {
   readonly property var popup: hostLoader.item
   readonly property Item keyboardItem: keyboard
   readonly property real contentImplicitHeight: content.implicitHeight
+  // Compact galleries give up height when the screen is too short for the
+  // full panel, so the card never overflows (adjusted after layout settles).
+  property real compactShrink: 0
+  readonly property real roomCap: popup && popup.availableCardHeight > 0
+    ? Math.min(popup.availableCardHeight, Style.space(880)) - popup.verticalContentInset : 1e6
+  function refit() {
+    if (expanded) { compactShrink = 0; return }
+    let next = Math.max(0, compactShrink + content.implicitHeight - roomCap)
+    if (Math.abs(next - compactShrink) > 0.5) compactShrink = next
+  }
+  function fitted(desired, minimum) { return Math.max(minimum, desired - compactShrink) }
+  onRoomCapChanged: Qt.callLater(refit)
+  onExpandedChanged: Qt.callLater(refit)
+  Connections { target: content; function onImplicitHeightChanged() { Qt.callLater(root.refit) } }
   FileView {
     path: root.pluginDir + "/../denon.bar/panels/PopupPanel.qml"
     printErrors: false
@@ -1229,10 +1243,19 @@ Panel {
             onClicked: root.favoritesOnly = !root.favoritesOnly
             PanelToolTip { visible: favoritesButton.containsMouse; text: root.favoritesOnly ? "Show all themes" : "Favorites only"; fontFamily: root.family }
           }
+          // Wide fonts (Omarchy's monospace default): drop the label before the
+          // All / Dark / Light filter gets cramped.
+          TextMetrics { id: segMetrics; font.family: root.family; font.pixelSize: Style.font.body; text: "Light" }
+          TextMetrics { id: addMetrics; font.family: root.family; font.pixelSize: Style.font.body; text: "Add theme" }
           GhostButton {
             id: addButton
+            readonly property real others: (favoritesButton.visible ? favoritesButton.width + parent.spacing : 0)
+              + (groupButton.visible ? groupButton.width + parent.spacing : 0)
+              + (sortButton.visible ? sortButton.width + parent.spacing : 0)
+            readonly property bool roomForLabel: parent.width - others - parent.spacing - (addMetrics.width + Style.space(44))
+              >= 3 * (segMetrics.width + Style.space(26))
             height: filterTrack.height
-            label: root.expanded ? "" : "Add theme"
+            label: root.expanded || !roomForLabel ? "" : "Add theme"
             glyph: "+"
             onClicked: { root.showHelp = !root.showHelp; search.forceActiveFocus() }
           }
@@ -1444,7 +1467,7 @@ Panel {
           // Room for the pile on top-row lookalike stacks.
           topMargin: Style.space(4)
           height: root.expanded ? Math.max(Style.space(200), rightPane.height - y)
-                                : Math.min(contentHeight + topMargin, (thumbH + Style.space(46)) * (root.reviewing ? 2 : 3))
+                                : root.fitted(Math.min(contentHeight + topMargin, (thumbH + Style.space(46)) * (root.reviewing ? 2 : 3)), Math.min(contentHeight + topMargin, thumbH + Style.space(46)))
           cellWidth: width / root.gridCols
           cellHeight: thumbH + Style.space(46)
           clip: true
@@ -1747,7 +1770,7 @@ Panel {
             width: parent.width
             readonly property real thumbH: Math.round((width / root.gridCols - Style.space(9)) * 0.62)
             height: root.expanded ? Math.max(Style.space(200), rightPane.height - discoverCol.y - y)
-                                  : Math.min(contentHeight, (thumbH + Style.space(46)) * (root.discoverPick ? 2 : 3))
+                                  : root.fitted(Math.min(contentHeight, (thumbH + Style.space(46)) * (root.discoverPick ? 2 : 3)), Math.min(contentHeight, thumbH + Style.space(46)))
             cellWidth: width / root.gridCols
             cellHeight: thumbH + Style.space(46)
             clip: true
@@ -2100,7 +2123,7 @@ Panel {
             readonly property int cols: root.expanded ? 3 : 2
             readonly property real thumbH: Math.round((width / cols - Style.space(8)) * 0.58)
             height: root.expanded ? Math.max(Style.space(180), rightPane.height - findMoreCol.y - y - Style.space(80))
-                                  : Math.min(contentHeight, (thumbH + Style.space(30)) * (root.wallPick ? 1.5 : 2.6))
+                                  : root.fitted(Math.min(contentHeight, (thumbH + Style.space(30)) * (root.wallPick ? 1.5 : 2.6)), Math.min(contentHeight, thumbH + Style.space(30)))
             cellWidth: width / cols
             cellHeight: thumbH + Style.space(30)
             clip: true
