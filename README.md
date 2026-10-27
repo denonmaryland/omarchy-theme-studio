@@ -92,6 +92,11 @@ it installs without `.git` (archives, web pages, repository subfolders, folders)
   `vscode.json` are removed, along with any symlinks.
 - Git installs are shallow clones with symlinks disabled (also for later
   updates) and no submodules. The installed commit is recorded.
+- Updates are pulled and checked in a temporary copy before replacing an
+  installed theme. Failed pulls or updates missing a theme definition leave
+  the existing installation intact; successful updates preserve local files.
+- Older themes that only provide `alacritty.toml` have their palette converted
+  to `colors.toml` before the terminal config is removed.
 - Downloads are http(s) only, with size limits. Archives are checked for unsafe
   paths, total unpacked size (1 GiB) and file count (5000).
 
@@ -107,6 +112,22 @@ Hyprland config (`~/.config/hypr/hyprland.lua`).
 If the `denon.bar` glass bar plugin is installed, Theme Studio uses its
 animated panel host (hover to preview, click to keep). Otherwise it uses
 Omarchy's standard popup.
+
+## Development checks
+
+```bash
+python3 -m unittest discover -s tests -v
+node --test tests/theme_queue.cjs
+omarchy plugin validate .
+```
+
+The importer checks use temporary folders and local Git repositories. Legacy
+palette coverage needs Omarchy's `omarchy-theme-colors-from-alacritty` command.
+The Node.js checks exercise the QML switching functions without a desktop;
+they do not replace a live mouse walkthrough or short-screen layout checks.
+
+Release preparation and outstanding live checks are tracked in
+[the marketplace checklist](docs/RELEASE-CHECKLIST.md).
 
 ## License
 

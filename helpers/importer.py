@@ -369,13 +369,58 @@ def install_folder(src, slug, source=None):
     """
     target = THEMES / slug
     THEMES.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(src, target, symlinks=True, ignore=shutil.ignore_patterns('.git', '.github', '__MACOSX'))
-    removed = strip_code(target)
-    if removed:
-        say(f'Removed {removed} file(s) that could run code')
-    if source:
-        (target / 'SOURCE.json').write_text(json.dumps(source, indent=2) + '\n')
+    target.mkdir()  # Own this new directory before allowing cleanup on failure.
+    try:
+        shutil.copytree(src, target, dirs_exist_ok=True, symlinks=True,
+                        ignore=shutil.ignore_patterns('.git', '.github', '__MACOSX'))
+        colors = target / 'colors.toml'
+        alacritty = target / 'alacritty.toml'
+        legacy_colors = None
+        if not (colors.is_file() and not colors.is_symlink()) and alacritty.is_file() and not alacritty.is_symlink():
+            # Extract only palette data in isolation; never keep the terminal's
+            # command settings, or let the converter follow a supplied symlink.
+            with tempfile.TemporaryDirectory(prefix='theme-studio-palette-') as tmp:
+                scratch = Path(tmp)
+                shutil.copyfile(alacritty, scratch / 'alacritty.toml')
+                run('omarchy-theme-colors-from-alacritty', str(scratch), timeout=20)
+                if (scratch / 'colors.toml').is_file():
+                    legacy_colors = (scratch / 'colors.toml').read_text()
+        removed = strip_code(target)
+        if legacy_colors is not None:
+            colors.write_text(legacy_colors)
+        if not usable_theme(target):
+            raise Fail('The download did not contain a usable theme palette')
+        if removed:
+            say(f'Removed {removed} file(s) that could run code')
+        if source:
+            (target / 'SOURCE.json').write_text(json.dumps(source, indent=2) + '\n')
+    except BaseException:
+        shutil.rmtree(target, ignore_errors=True)
+        raise
     return target
+
+
+def usable_theme(folder):
+    return any(p.is_file() and not p.is_symlink()
+               for p in (folder / 'colors.toml', folder / 'alacritty.toml'))
+
+
+def update_git(target):
+    # Pull into a private copy first. Preserve local/untracked files and leave
+    # the installed theme untouched if the pull or validation fails. Stage beside
+    # the themes folder (same filesystem for the swap) so theme menus never list it.
+    with tempfile.TemporaryDirectory(prefix='.theme-studio-update-', dir=THEMES.parent) as tmp:
+        stage, previous = Path(tmp) / 'repo', Path(tmp) / 'previous'
+        shutil.copytree(target, stage, symlinks=True)
+        run('git', *GIT_SAFE, '-C', str(stage), 'pull', '--ff-only', '--no-recurse-submodules', timeout=180)
+        if not usable_theme(stage):
+            raise Fail('The update did not contain a usable theme; the installed theme was kept')
+        target.rename(previous)
+        try:
+            stage.rename(target)
+        except BaseException:
+            previous.rename(target)
+            raise
 
 
 # ---------------------------------------------------------------- palette
@@ -645,7 +690,7 @@ def install_git(url, name_hint, mode='auto'):
             origin = ''
         if origin.removesuffix('.git').rstrip('/') == url.removesuffix('.git').rstrip('/'):
             say('Already installed, updating…')
-            run('git', *GIT_SAFE, '-C', str(target), 'pull', '--ff-only', '--no-recurse-submodules', timeout=180)
+            update_git(target)
             return base, 'git'
     tmp = Path(tempfile.mkdtemp(prefix='theme-studio-'))
     try:
@@ -776,8 +821,7 @@ def thumb(slug):
 
 def finish(slug, how, apply, display='', source='', profile=''):
     target = THEMES / slug
-    if not ((target / 'colors.toml').is_file() or (target / 'alacritty.toml').is_file()):
-        shutil.rmtree(target, ignore_errors=True)
+    if not usable_theme(target):
         raise Fail('The download did not contain a usable theme')
     name = display.strip() or slug.replace('-', ' ').title()
     marker = {'installed_at': time.time(), 'kind': how, 'name': name, **({'source': source} if source else {})}

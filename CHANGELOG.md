@@ -12,3 +12,12 @@ First standalone version, prepared for the Omarchy plugin marketplace.
   panel.
 - Hardened installs: code files and symlinks are stripped from themes without
   `.git`; safe git clones; archive and download limits.
+- Git updates are staged and validated before replacing installed themes,
+  preserving local files and retaining the previous installation on failure.
+  The staging copy sits outside the themes folder, so theme menus never list it.
+- Legacy folder, archive and repository-subfolder themes retain their palette
+  by converting `alacritty.toml` before removing executable settings.
+- Failed theme switches preserve newer queued selections, including a repeated
+  random pick.
+- Regression checks cover importer failures, legacy palette extraction and
+  queued switching behavior.

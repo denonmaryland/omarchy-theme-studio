@@ -137,6 +137,9 @@ Panel {
   }
   function resetBack() { backTrail = []; backStep = 0 }
   property string wantTheme: ""      // slug or "*random*" still to apply
+  property string activeTheme: ""    // request currently running in themeProc
+  property int themeSeq: 0           // bumped per click; tells repeat randoms apart
+  property int activeSeq: 0          // themeSeq of the request in themeProc
   property string optimistic: ""     // slug shown as current before it lands
   readonly property string shownCurrent: optimistic || values.current || ""
   readonly property var shownItem: (values.themes || []).find(t => t.slug === shownCurrent) || null
@@ -286,6 +289,7 @@ Panel {
   function requestTheme(slug, fromBack) {
     if (!slug) return
     if (!fromBack) resetBack()
+    themeSeq++
     wantTheme = slug
     optimistic = slug === "*random*" ? "" : slug
     message = slug === "*random*" ? "Picking a theme…" : "Applying " + themeName(slug) + "…"
@@ -300,6 +304,8 @@ Panel {
       return
     }
     themeError = false
+    activeTheme = slug
+    activeSeq = themeSeq
     wantTheme = slug === "*random*" ? "" : slug
     themeProc.command = slug === "*random*" ? ["/usr/bin/python3", helper, "random"] : ["/usr/bin/python3", helper, "theme-select", slug]
     themeProc.running = true
@@ -572,10 +578,12 @@ Panel {
     onExited: function(code) {
       if (code !== 0) {
         // Drop the failed pick; keep a newer click if one is waiting.
-        if (root.wantTheme === root.optimistic) { root.wantTheme = ""; root.optimistic = "" }
+        if (root.themeSeq === root.activeSeq) root.wantTheme = ""
+        if (!root.wantTheme) root.optimistic = ""
         root.themeError = true
         root.message = "That theme didn't apply. Check the service log."
       }
+      root.activeTheme = ""
       Qt.callLater(root.pumpTheme)
       Qt.callLater(root.refresh)
     }

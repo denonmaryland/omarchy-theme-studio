@@ -47,7 +47,8 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
 ## Compatibility and polish
 - [ ] Works on stock Omarchy with the default bar; test on a clean user account.
 - [x] Tolerate missing optional tools (ImageMagick `magick`, `notify-send`, `git`).
-- [ ] `omarchy plugin validate .` clean; version bump; CHANGELOG.
+- [x] `omarchy plugin validate .` clean on the reviewed local source (2026-10-26).
+- [ ] Final release version and CHANGELOG; validate the exact release candidate again.
 - [ ] Submit with `gh issue create` (owner reviews the issue text first).
 
 ## Still open
@@ -60,6 +61,17 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
       run, filter roomy.
 - [ ] Re-check the compact gallery fit on a short screen with the lowered minimum
       (c4988a4); the test session's shell was lost to a harness mistake before re-check.
-- [ ] Code review (owner will use a different model).
+- [x] Targeted helper/install review (2026-10-26): three findings fixed locally;
+      Git updates stage before replacement, legacy palettes are extracted before
+      stripping terminal configs, failed switches keep newer queued selections.
+      Seven Python and four Node regression tests passed. Changes remain
+      uncommitted and undeployed; this was not an exhaustive whole-repo review.
+- [x] Second-model review of those fixes (2026-10-26): two follow-ups fixed —
+      update staging moved out of the themes folder (it showed in Omarchy's theme
+      list), and a repeated random pick now survives a failed one. Eight Python
+      and five Node tests pass; each new test fails on the old code. Still
+      uncommitted and undeployed.
+- [ ] Live regression check of those fixes on the release candidate.
 - [ ] Retake preview.png from the final UI.
+- [ ] Prepare promo video/screenshots with licensed assets and no private desktop data.
 - [ ] After review: make public and submit.
