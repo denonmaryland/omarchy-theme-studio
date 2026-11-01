@@ -674,6 +674,29 @@ Panel {
   }
 
   // ---------------------------------------------------------------- pieces
+  component GalleryScroll: WheelHandler {
+    required property GridView view
+    // Keep high-resolution gestures proportional instead of rounding to rows.
+    readonly property real pixelScale: 3
+    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
+    target: null
+    enabled: view.interactive
+    // Wayland can supply pixel deltas even without a touchpad gesture phase.
+    onWheel: function(event) {
+      scroll(event, point.device.type === PointerDevice.Mouse || event.phase === Qt.NoScrollPhase)
+    }
+    function scroll(event, useAngles) {
+      const delta = !useAngles && event.pixelDelta.y !== 0 ? event.pixelDelta.y * pixelScale
+                                                         : event.angleDelta.y / 120 * view.cellHeight
+      if (delta === 0) { event.accepted = false; return }
+      const top = view.originY - view.topMargin
+      const bottom = Math.max(top, view.originY + view.contentHeight - view.height + view.bottomMargin)
+      view.cancelFlick()
+      view.contentY = Math.max(top, Math.min(bottom, view.contentY - delta))
+      event.accepted = true
+    }
+  }
+
   // Inset tile that groups related rows (foreground at 5% over the card).
   component GlassTile: Rectangle {
     property color foreground: Commons.Color.foreground
@@ -1491,6 +1514,7 @@ Panel {
         GridView {
           id: grid
           HoverHandler { id: gridHover }
+          GalleryScroll { view: grid }
           visible: !root.linkMode && root.themeScope !== "discover"
           width: parent.width
           readonly property real thumbH: Math.round((width / root.gridCols - Style.space(9)) * 0.62)
@@ -1797,6 +1821,7 @@ Panel {
           GridView {
             id: discoverGrid
             HoverHandler { id: discoverHover }
+            GalleryScroll { view: discoverGrid }
             visible: root.discoverModel.length > 0
             width: parent.width
             readonly property real thumbH: Math.round((width / root.gridCols - Style.space(9)) * 0.62)
@@ -2150,6 +2175,7 @@ Panel {
           GridView {
             id: wallGrid
             HoverHandler { id: wallHover }
+            GalleryScroll { view: wallGrid }
             visible: root.wallResults.length > 0
             width: parent.width
             readonly property int cols: root.expanded ? 3 : 2

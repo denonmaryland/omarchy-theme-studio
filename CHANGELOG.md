@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Faster gallery scrolling: trackpad pixel movement is scaled by three, and
+  angle-only wheel input moves one row per notch. Applies to installed themes,
+  Discover and wallpaper search in both compact and wide layouts.
+
 ## 0.1.0 (2026-10-27)
 
 First standalone version, prepared for the Omarchy plugin marketplace, under the

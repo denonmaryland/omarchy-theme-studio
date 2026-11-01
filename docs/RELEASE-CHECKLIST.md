@@ -1,7 +1,42 @@
 # Release checklist (marketplace)
 
-Status of each item needed before submitting to
+Release evidence and remaining checks for
 https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECURITY.md).
+
+## Marketplace outcome (checked 2026-11-01)
+
+- Repository is public. Version 0.1.0 was submitted as
+  [issue #12994](https://github.com/omacom/omarchy-plugin-marketplace/issues/12994).
+- Compatibility validation and the automated security baseline passed at
+  `0b604c2ffab73341411f96859fe9f30dded7618f`. That evidence does not cover later commits.
+- The maintainer closed the submission on 2026-10-27: plugins primarily
+  providing or installing themes are outside the marketplace's scope.
+  This is not an approved marketplace listing.
+- The owner's 2026-10-28 follow-up asks whether an installed-themes-only version
+  would qualify. No reply was present on 2026-11-01. Product scope is unchanged;
+  any reduced-scope release or new submission needs a separate decision.
+
+## Local scrolling fix (2026-10-28, unreleased)
+
+- Shared wheel handler for installed themes, Discover and wallpaper search:
+  phased trackpad pixel movement is scaled by three; physical wheels and events
+  without a gesture phase move a row per notch. Bounds include view margins.
+- Verified: 15 Python tests, 12 Node tests (`node --test tests/*.cjs`), plugin
+  validation and diff checks. No skips. Isolated Qt input checks passed for
+  compact/wide wheel delivery, pixel input, boundaries, horizontal scrolling
+  and clicks. Native Qt touchpad events verified updates, momentum and gesture
+  end, plus physical and phase-free wheel events.
+- Deployed only the changed QML locally after backing up the previous file to
+  `~/.local/state/omarchy-theme-studio-backups/20261028T071052Z-trackpad-scroll/`.
+  A shell restart was required to load it. Live injected wheel input moved
+  122 logical pixels in compact mode and 169 in wide mode in both hosts;
+  Discover also scrolled. Inspected panel renders and found no new QML errors.
+  Restored the compact glass host and Installed view.
+- Physical trackpad feel and a live wallpaper-search flow remain unverified;
+  the latter uses the same handler. Automated checks were rerun on 2026-11-01:
+  15 Python and 12 Node tests passed without skips, plus plugin validation and
+  diff checks. No new live verification was performed. This local commit does
+  not publish a release or update the marketplace.
 
 ## Repository basics
 - [x] Own repository, `manifest.json` at the root
@@ -12,11 +47,10 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
       `theme_studio_border` module) are unchanged; old border lines still match.
 - [x] Tags: bar, hyprland, quickshell.
 - [x] `preview.png` at the root (panel-only screenshot of the final UI)
-- [x] LICENSE file (owner to choose; MIT is the common choice)
-- [x] README with install, removal, external dependencies (draft present)
-- [x] Private GitHub repository: https://github.com/denonmaryland/omarchy-theme-studio
-- [ ] Make it public (owner approval). Before that, decide whether commits should show
-      the personal git email or the GitHub noreply address.
+- [x] MIT LICENSE file
+- [x] README with install, removal and external dependencies
+- [x] Public GitHub repository: https://github.com/denonmaryland/omarchy-theme-studio
+- [x] Published history uses the GitHub noreply identity (2026-10-27).
 
 ## Make it self-contained (blocking)
 - [x] Helpers: QML points at `~/.local/share/omarchy-theme-rotation/*.py`. Load them
@@ -53,10 +87,11 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
 - [x] Works on stock Omarchy with the default bar; tested on a clean user account.
 - [x] Tolerate missing optional tools (ImageMagick `magick`, `notify-send`, `git`).
 - [x] `omarchy plugin validate .` clean on the reviewed local source (2026-10-26).
-- [ ] Final release version and CHANGELOG; validate the exact release candidate again.
-- [ ] Submit with `gh issue create` (owner reviews the issue text first).
+- [x] Version 0.1.0 and CHANGELOG released; marketplace checks passed at the
+      exact snapshot recorded above. The scrolling fix remains unreleased.
+- [x] Submitted as issue #12994; closed as out of scope (see outcome above).
 
-## Still open
+## Verification history and remaining checks
 - [x] Clean user account, stock Omarchy config (/etc/skel) and stock bar, nested Hyprland
       (2026-10-26): `omarchy plugin add file://… --enable --yes` validated, installed and
       placed the widget; `omarchy plugin update` worked; panel opens in the stock popup
@@ -72,14 +107,14 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
 - [x] Targeted helper/install review (2026-10-26): three findings fixed locally;
       Git updates stage before replacement, legacy palettes are extracted before
       stripping terminal configs, failed switches keep newer queued selections.
-      Seven Python and four Node regression tests passed. Changes remain
-      uncommitted and undeployed; this was not an exhaustive whole-repo review.
+      Seven Python and four Node regression tests passed. Subsequently committed
+      in 3284db2 and deployed; this was not an exhaustive whole-repo review.
 - [x] Second-model review of those fixes (2026-10-26): two follow-ups fixed —
       update staging moved out of the themes folder (it showed in Omarchy's theme
       list), and a repeated random pick now survives a failed one. Eight Python
-      and five Node tests pass; each new test fails on the old code. Still
-      uncommitted and undeployed.
-- [ ] Live regression check of those fixes on the release candidate.
+      and five Node tests passed; each new test failed on the old code. These fixes
+      were subsequently committed in 3284db2 and deployed.
+- [x] Live regression check of those fixes on the release candidate.
       2026-10-26, glass bar host. Python helper changes take effect at once:
       live Git update of `futurism` staged only in `~/.config/omarchy/`, nothing
       in the themes folder, cleaned up after; live legacy folder import produced
@@ -107,4 +142,7 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
       workspace (Follow-the-sun times blurred), compact/Discover/wide screenshots
       over the wallpaper; preview.png is the compact panel on a full desktop.
       Social carousel and MP4 kept outside the repo.
-- [ ] After review: make public and submit.
+- [x] Made public and submitted on 2026-10-27; see marketplace outcome above.
+- [ ] Verify physical trackpad feel and the live wallpaper-search scrolling flow.
+- [ ] Decide whether to pursue the proposed installed-themes-only marketplace version
+      after eligibility feedback; no scope change is authorized by this checklist.
