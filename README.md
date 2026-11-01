@@ -9,14 +9,28 @@
 </p>
 
 <p align="center">
-  <a href="#install"><img alt="Omarchy plugin" src="https://img.shields.io/badge/omarchy-plugin-7aa2f7?style=flat-square&labelColor=1a1b26"></a>
+  <a href="https://omarchyplugins.com/"><img alt="Omarchy plugin" src="https://img.shields.io/badge/omarchy-plugin-7aa2f7?style=flat-square&labelColor=1a1b26"></a>
+  <img alt="260+ community themes" src="https://img.shields.io/badge/discover-260%2B%20themes-9ece6a?style=flat-square&labelColor=1a1b26">
   <img alt="Quickshell" src="https://img.shields.io/badge/quickshell-qml-9ece6a?style=flat-square&labelColor=1a1b26">
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-bb9af7?style=flat-square&labelColor=1a1b26"></a>
 </p>
 
-![Clicking through themes in the panel: the whole desktop re-themes with each click](docs/images/demo.gif)
+<p align="center">
+  <img src="docs/images/demo.gif" alt="Clicking through themes in the panel: the whole desktop re-themes with each click" width="880"><br>
+  <sub>Recorded on Omarchy with the optional denon.bar glass bar. On the stock bar the same panel opens in Omarchy's standard popup.</sub>
+</p>
 
-<sub>Recorded on Omarchy with the optional denon.bar glass bar. On the stock bar the same panel opens in Omarchy's standard popup.</sub>
+<br>
+
+<table align="center">
+<tr>
+<td align="center" width="33%"><h3>Browse</h3>Installed, Recent and Discover tabs with light/dark filters, favorites, search and lookalike grouping. 260+ community themes, or paste any link.</td>
+<td align="center" width="33%"><h3>Apply</h3>Click a theme and the whole desktop follows, instantly. The last click always wins, and a back button steps through your last ten.</td>
+<td align="center" width="33%"><h3>Rotate</h3>A new theme every 15, 30 or 60 minutes, tuned with Keep / Maybe / Not for me, or follow the sun: light at sunrise, dark at sunset, computed locally.</td>
+</tr>
+</table>
+
+<br>
 
 ## Install
 
@@ -47,17 +61,24 @@ Then click the palette icon in the bar.
 
 ## Features
 
-- **Instant switching.** The panel updates the moment you click, and rapid clicking never gets stuck.
-- **Installed · Recent · Discover.** Light/dark filters, favorites, search, and lookalike grouping
-  (near-identical themes stack into one tile).
-- **Back button.** Step back through your last 10 themes, each with the wallpaper you last used with it.
-- **Install from a link.** GitHub repos, theme pages, zip/tar archives, images or a local folder.
-  Images become a full generated theme, with six palette styles to choose from.
-- **Rotation.** A new theme every 15, 30 or 60 minutes, with Keep / Maybe / Not for me to tune the mix.
-  **Follow the sun** switches to light themes at sunrise and dark at sunset, computed locally.
-- **Wallpapers.** Pick between a theme's wallpapers, shuffle them, or find openly licensed images
-  on Openverse. Credits are saved next to each download.
-- **Window borders.** Pick a border color from the theme's palette, or turn borders off for every theme.
+<table>
+<tr>
+<td width="50%" valign="top"><strong>Instant switching.</strong><br>The panel updates the moment you click, and rapid clicking never gets stuck.</td>
+<td width="50%" valign="top"><strong>Installed · Recent · Discover.</strong><br>Light/dark filters, favorites, search, and lookalike grouping: near-identical themes stack into one tile.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><strong>Responsive gallery scrolling.</strong><br>Trackpad gestures scroll smoothly with increased travel; mouse wheels move a row per notch across themes, Discover and wallpaper search.</td>
+<td width="50%" valign="top"><strong>Back button.</strong><br>Step back through your last 10 themes, each with the wallpaper you last used with it.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><strong>Install from a link.</strong><br>GitHub repos, theme pages, zip/tar archives, images or a local folder. Images become a full generated theme, with six palette styles to choose from.</td>
+<td width="50%" valign="top"><strong>Rotation and Follow the sun.</strong><br>A new theme every 15, 30 or 60 minutes, with Keep / Maybe / Not for me to tune the mix. Follow the sun switches to light themes at sunrise and dark at sunset, computed locally.</td>
+</tr>
+<tr>
+<td width="50%" valign="top"><strong>Wallpapers.</strong><br>Pick between a theme's wallpapers, shuffle them, or find openly licensed images on Openverse. Credits are saved next to each download.</td>
+<td width="50%" valign="top"><strong>Window borders.</strong><br>Pick a border color from the theme's palette, or turn borders off for every theme.</td>
+</tr>
+</table>
 
 | Key | Action | Key | Action |
 |---|---|---|---|
@@ -154,7 +175,7 @@ its author has published. Only install themes you trust.
 
 ```bash
 python3 -m unittest discover -s tests -v
-node --test tests/theme_queue.cjs
+node --test tests/*.cjs
 omarchy plugin validate .
 ```
 
@@ -168,6 +189,8 @@ Release preparation and outstanding live checks are tracked in
 
 </details>
 
-## License
+<br>
 
-MIT. Themes and wallpapers shown in the screenshots belong to their creators.
+<div align="center">
+<sub>MIT licensed · themes and wallpapers shown in the screenshots belong to their creators · built on <a href="https://omarchy.org">Omarchy</a> · made by <a href="https://github.com/denonmaryland">denonmaryland</a></sub>
+</div>
