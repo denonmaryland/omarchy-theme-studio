@@ -16,7 +16,14 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
   would qualify. No reply was present on 2026-11-01. Product scope is unchanged;
   any reduced-scope release or new submission needs a separate decision.
 
-## Local scrolling fix (2026-10-28, unreleased)
+## 0.2.0 (prepared 2026-11-02)
+
+- Contents: update checks and the gallery scrolling fix below.
+- `manifest.json` and `builtVersion` are both 0.2.0; CHANGELOG dated.
+- Checks before the release commit: listed in the commit's verification note.
+- Not part of a marketplace listing: the submission was closed (see above).
+
+## Local scrolling fix (2026-10-28, released in 0.2.0)
 
 - Shared wheel handler for installed themes, Discover and wallpaper search:
   phased trackpad pixel movement is scaled by three; physical wheels and events
@@ -143,6 +150,22 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
       over the wallpaper; preview.png is the compact panel on a full desktop.
       Social carousel and MP4 kept outside the repo.
 - [x] Made public and submitted on 2026-10-27; see marketplace outcome above.
+- [ ] Bump `manifest.json` `version` and `builtVersion` in `ThemeStudio.qml`
+      together for every release users should be told about (a test checks
+      they match). Update checks compare manifest versions, so commits
+      without a bump (docs, README) don't notify anyone.
+- [x] Update checks (unreleased), verified live 2026-11-02 on the glass host,
+      compact layout: a temporary git install of this source pointed at a local
+      upstream with a fake 0.2.0. The automatic check fired about 90 s after
+      startup and found 0.2.0. The dot appeared on the bar glyph and ⋯, and
+      ⋯ → Update installed it through `omarchy plugin update`. The plugin
+      rescan re-created the panel from old QML and lost the in-memory restart
+      flag; fixed with `builtVersion`, then reverified: Restart shell to
+      finish update appeared, the restart loaded the new QML (IPC marker),
+      and the prompt cleared. Up to date, the daily-check toggle (saved off and
+      on) and the unreachable-repository error were also checked. The original
+      live plugin was restored afterwards. Not checked live: the stock host,
+      the wide layout, and the final ⋯ tooltip wording change.
 - [ ] Verify physical trackpad feel and the live wallpaper-search scrolling flow.
 - [ ] Decide whether to pursue the proposed installed-themes-only marketplace version
       after eligibility feedback; no scope change is authorized by this checklist.

@@ -1,7 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 (2026-11-02)
 
+- Update checks: about once a day (and on demand from ⋯) the plugin checks the
+  repository it was installed from. A newer manifest version puts a dot on the
+  bar icon and ⋯; one click runs `omarchy plugin update`, then a restart
+  loads it. Daily checks can be turned off. Git installs only.
 - Faster gallery scrolling: trackpad pixel movement is scaled by three, and
   angle-only wheel input moves one row per notch. Applies to installed themes,
   Discover and wallpaper search in both compact and wide layouts.

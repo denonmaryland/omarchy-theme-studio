@@ -29,6 +29,7 @@ Panel {
   readonly property string importer: pluginDir + "/helpers/importer.py"
   readonly property string discoverer: pluginDir + "/helpers/discover.py"
   readonly property string wallpaperer: pluginDir + "/helpers/wallpapers.py"
+  readonly property string updater: pluginDir + "/helpers/updates.py"
 
   property var values: ({ enabled: false, interval_minutes: 15, current_name: "Loading…", themes: [], backgrounds: [],
                           seconds_remaining: null, shuffle_background: false, pending_review: null, current_palette: [] })
@@ -93,6 +94,7 @@ Panel {
   property var gridModel: [{ surprise: true }]
   property int cursor: -1
   property bool menuOpen: false
+  onMenuOpenChanged: if (!menuOpen && !updateBusy) updateNote = ""
   property bool confirmDelete: false
   property bool borderOpen: false
   onBorderOpenChanged: if (!borderOpen) borderHover = ""
@@ -109,6 +111,32 @@ Panel {
   readonly property bool menuCanDelete: !!values.can_delete_current
   readonly property string menuVariantLabel: "Switch to " + (String(values.current).endsWith("-light") ? "dark" : "light") + " variant"
   property bool showHelp: false
+
+  // Updates: a daily check of the repository the plugin was installed from
+  // (git installs only). Installing hands off to `omarchy plugin update`; the
+  // new panel loads after a shell restart.
+  // The version this QML was released as; must match manifest.json (a test
+  // checks). If the installed manifest is newer, the files were updated but
+  // this panel is still the old code until the shell restarts. Plugin rescans
+  // re-create the panel from the old QML, so this can't live in memory alone.
+  readonly property string builtVersion: "0.2.0"
+  property var updateInfo: ({})
+  property string updateBusy: ""   // "check", "install" or "auto" while the helper runs
+  property string updateKind: ""   // what the last helper run was, for its result
+  property bool updateManual: false
+  property bool updateInstalled: false
+  readonly property bool updateRestart: updateInstalled
+    || (!!updateInfo.current_version && updateInfo.current_version !== builtVersion)
+  property string updateNote: ""
+  readonly property bool updateAvailable: !!updateInfo.available && !updateRestart
+  readonly property bool updateAttention: updateAvailable || updateRestart
+  readonly property string updateLabel: updateBusy === "install" ? "Updating…"
+    : updateBusy === "check" && updateManual ? "Checking for updates…"
+    : updateRestart ? "Restart shell to finish update"
+    : updateAvailable ? "Update to " + updateInfo.latest_version
+    : updateNote || "Check for updates"
+  readonly property bool updateAuto: updateInfo.auto_check !== false
+  readonly property bool updateManaged: updateInfo.managed !== false
 
   // Importer
   readonly property bool linkMode: isLink(query)
@@ -452,6 +480,43 @@ Panel {
     } catch (e) { message = "That didn't work. Check the service log." }
   }
 
+  // ---- Updates
+  function runUpdate(args) {
+    if (updateProc.running) return
+    updateBusy = args[0]
+    updateKind = args[0]
+    updateProc.command = ["/usr/bin/python3", updater].concat(args)
+    updateProc.running = true
+  }
+  function checkUpdates(manual) {
+    if (updateProc.running || updateRestart) return
+    updateManual = manual
+    if (manual) updateNote = ""
+    runUpdate(manual ? ["check"] : ["check", "auto"])
+  }
+  function receiveUpdate(text) {
+    if (!String(text).trim()) return
+    try {
+      let r = JSON.parse(text)
+      updateInfo = r
+      if (updateKind === "install") {
+        if (r.installed) updateInstalled = true
+        else updateNote = "Already up to date"
+      } else if (updateKind === "check" && updateManual) {
+        updateNote = r.error ? r.error
+          : !r.managed ? "Updates need a git install"
+          : r.available ? ""
+          : "Up to date · v" + r.current_version
+      }
+    } catch (e) { updateNote = "Couldn't check for updates." }
+  }
+  function updateClicked() {
+    if (updateBusy) return
+    if (updateRestart) Quickshell.execDetached(["omarchy", "restart", "shell"])
+    else if (updateAvailable) { updateNote = ""; runUpdate(["install"]) }
+    else checkUpdates(true)
+  }
+
   // ---- Follow the sun
   function sunTime(epoch) { return epoch ? Qt.formatTime(new Date(epoch * 1000), "h:mm AP") : "—" }
 
@@ -471,7 +536,8 @@ Panel {
     }
   }
 
-  Component.onCompleted: refresh()
+  // The update status is local only; it shows a restart still pending after an update.
+  Component.onCompleted: { refresh(); runUpdate(["status"]) }
   FileView {
     path: root.uiFile
     printErrors: false
@@ -518,6 +584,19 @@ Panel {
     onFileChanged: { reload(); historyTimer.restart() }
   }
   Timer { id: historyTimer; interval: 800; onTriggered: root.refresh() }
+  // Update checks: shortly after the shell starts, then every few hours. The
+  // helper skips the network unless automatic checks are on and a day has passed.
+  Timer { interval: 90000; running: true; onTriggered: root.checkUpdates(false) }
+  Timer { interval: 6 * 3600 * 1000; repeat: true; running: true; onTriggered: root.checkUpdates(false) }
+  Process {
+    id: updateProc
+    stdout: StdioCollector { onStreamFinished: root.receiveUpdate(text) }
+    stderr: StdioCollector { id: updateErr }
+    onExited: function(code) {
+      if (code !== 0 && (root.updateManual || root.updateKind !== "check")) root.updateNote = root.helperError(updateErr.text)
+      root.updateBusy = ""
+    }
+  }
   Timer { id: wallNextTimer; interval: 50; onTriggered: { let n = root.wallNext; root.wallNext = null; if (n) root.searchWalls(n[0], n[1]) } }
 
   IpcHandler {
@@ -534,6 +613,10 @@ Panel {
     function border(): void { root.open(); root.refresh(); root.menuOpen = false; root.borderOpen = true }
     function review(): void { root.open(); root.refresh() }
     function state(): string { return JSON.stringify(root.values) }
+    function checkUpdates(): void { root.checkUpdates(true) }
+    function updateState(): string {
+      return JSON.stringify({ update: root.updateInfo, busy: root.updateBusy, restart: root.updateRestart, note: root.updateNote, label: root.updateLabel })
+    }
     function backgroundStep(direction: int): void { root.act("background-step", direction) }
     function browseThemes(favorites: bool, query: string): void {
       root.tab = 0; root.favoritesOnly = favorites; search.text = query; root.open(); root.refresh()
@@ -670,7 +753,16 @@ Panel {
     bar: root.bar
     text: "󰏘"
     tooltipText: "Best Theme Plugin Ever · rotation " + (root.values.enabled ? "on" : "paused")
+      + (root.updateRestart ? " · restart to finish update" : root.updateAvailable ? " · update available" : "")
     onPressed: if (!(popup && popup.commitHover(root))) root.toggle()
+    // On the glyph's top-right corner, not the corner of the whole bar slot.
+    Rectangle {
+      visible: root.updateAttention
+      width: Style.space(6); height: width; radius: width / 2
+      x: (parent.width + Style.bar.iconCanvas) / 2 - width * 0.7
+      y: (parent.height - Style.bar.iconCanvas) / 2 - height * 0.3
+      color: root.accent
+    }
   }
 
   // ---------------------------------------------------------------- pieces
@@ -703,11 +795,19 @@ Panel {
     radius: Math.max(6, Style.cornerRadius - Style.space(4))
     color: Qt.rgba(foreground.r, foreground.g, foreground.b, 0.05)
   }
+  // Small accent dot in the top-right corner of its parent.
+  component UpdateDot: Rectangle {
+    width: Style.space(6); height: width; radius: width / 2
+    anchors.top: parent.top; anchors.right: parent.right
+    anchors.topMargin: Style.space(3); anchors.rightMargin: Style.space(3)
+    color: root.accent
+  }
   component HeroChip: Rectangle {
     id: chip
     property string glyph: ""
     property string tip: ""
     property bool lit: false
+    property bool badge: false
     signal clicked()
     width: Style.space(30); height: width; radius: width / 2
     color: chipMouse.containsMouse ? Qt.rgba(0.04, 0.04, 0.03, 0.78) : Qt.rgba(0.04, 0.04, 0.03, 0.55)
@@ -722,6 +822,7 @@ Panel {
     }
     MouseArea { id: chipMouse; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: chip.clicked() }
     PanelToolTip { visible: chipMouse.containsMouse && chip.tip !== ""; text: chip.tip; fontFamily: root.family }
+    UpdateDot { visible: chip.badge; anchors.topMargin: 0; anchors.rightMargin: 0 }
   }
 
   component Dots: Row {
@@ -1111,7 +1212,7 @@ Panel {
               }
             }
           }
-          HeroChip { id: moreChip; glyph: "󰇘"; lit: root.menuOpen; tip: "More"; onClicked: { root.menuOpen = !root.menuOpen; root.confirmDelete = false; root.borderOpen = false } }
+          HeroChip { id: moreChip; glyph: "󰇘"; lit: root.menuOpen; badge: root.updateAttention; tip: root.updateRestart ? "More · restart to finish update" : root.updateAvailable ? "More · update available" : "More"; onClicked: { root.menuOpen = !root.menuOpen; root.confirmDelete = false; root.borderOpen = false } }
         }
       }
 
@@ -2761,7 +2862,10 @@ Panel {
             { id: "sep", show: true },
             { id: "hide", glyph: "󰈉", label: "Hide from rotation", show: true },
             { id: "cleanup", glyph: "󰃢", label: "Remove system changes", show: !!(root.values.border && root.values.border.installed) },
-            { id: "delete", glyph: "󰆴", label: "Delete theme…", show: root.menuCanDelete, danger: true }
+            { id: "delete", glyph: "󰆴", label: "Delete theme…", show: root.menuCanDelete, danger: true },
+            { id: "sep", show: true },
+            { id: "update", glyph: root.updateRestart ? "󰜉" : "󰚰", label: root.updateLabel, show: true, lit: root.updateAttention },
+            { id: "autoupdate", glyph: root.updateAuto ? "󰄲" : "󰄱", label: "Check for updates daily", show: root.updateManaged }
           ].filter(i => i.show)
           Rectangle {
             required property var modelData
@@ -2775,8 +2879,8 @@ Panel {
               anchors.verticalCenter: parent.verticalCenter
               x: Style.space(10)
               spacing: Style.space(10)
-              Text { text: modelData.glyph || ""; color: modelData.danger ? root.urgent : root.alphaOf(root.fg, 0.75); font.family: root.glyphFamily; font.pixelSize: Style.font.body + 1; anchors.verticalCenter: parent.verticalCenter }
-              Text { text: modelData.id === "delete" && root.confirmDelete ? "Click again to delete" : (modelData.label || ""); color: modelData.danger ? root.urgent : root.fg; font.family: root.family; font.pixelSize: Style.font.body; font.weight: modelData.danger && root.confirmDelete ? Font.DemiBold : Font.Normal }
+              Text { text: modelData.glyph || ""; color: modelData.danger ? root.urgent : modelData.lit ? root.accent : root.alphaOf(root.fg, 0.75); font.family: root.glyphFamily; font.pixelSize: Style.font.body + 1; anchors.verticalCenter: parent.verticalCenter }
+              Text { textFormat: Text.PlainText; text: modelData.id === "delete" && root.confirmDelete ? "Click again to delete" : (modelData.label || ""); color: modelData.danger ? root.urgent : modelData.lit ? root.accent : root.fg; font.family: root.family; font.pixelSize: Style.font.body; font.weight: modelData.danger && root.confirmDelete ? Font.DemiBold : Font.Normal }
             }
             MouseArea {
               id: itemMouse
@@ -2792,6 +2896,8 @@ Panel {
                 }
                 else if (modelData.id === "hide") { root.menuOpen = false; root.act("hide-current") }
                 else if (modelData.id === "cleanup") { root.menuOpen = false; root.act("cleanup") }
+                else if (modelData.id === "update") root.updateClicked()
+                else if (modelData.id === "autoupdate") root.runUpdate(["auto", root.updateAuto ? "off" : "on"])
                 else if (modelData.id === "delete") {
                   if (!root.confirmDelete) root.confirmDelete = true
                   else { root.act("remove-current"); root.menuOpen = false; root.confirmDelete = false }

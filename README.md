@@ -39,6 +39,25 @@ omarchy plugin add https://github.com/denonmaryland/omarchy-theme-studio --enabl
 
 Then click the palette icon in the bar.
 
+## Updates
+
+Once a day the plugin checks the repository it was installed from for a newer
+version. When one is out, a dot appears on the bar icon and on **⋯**. Choose
+**⋯ → Update to …**, then **Restart shell to finish update**. The update runs
+Omarchy's own `omarchy plugin update`, which checks the new version and rolls
+back if it fails.
+
+**⋯ → Check for updates** checks right away. Untick **⋯ → Check for updates
+daily** to stop the automatic checks. Updating from a terminal works too:
+
+```bash
+omarchy plugin update io.github.denonmaryland.theme-studio
+```
+
+Updates need the `omarchy plugin add` install above. A copied plugin folder
+can't update itself. Version 0.1.0 has no update check, so if you installed
+0.1.0, run the command above once; later versions will tell you themselves.
+
 ## A look around
 
 <table>
@@ -128,6 +147,7 @@ hooks, and it doesn't need root.
 | Installs themes into `~/.config/omarchy/themes/` | Only when you install one |
 | Saves wallpapers into the current theme's background folder, with `CREDITS.md` | Only when you save one |
 | Adds `~/.config/hypr/theme_studio_border.lua` and one marked `require` line at the end of `~/.config/hypr/hyprland.lua` | Only after you press **Allow** in the window border picker. **⋯ → Remove system changes** removes both. |
+| Updates the plugin's own folder with `omarchy plugin update` | Only when you choose **⋯ → Update** |
 | Settings and history in `~/.local/state/omarchy-theme-studio/`; thumbnails and downloads in `~/.cache/omarchy-theme-studio/` | Always |
 
 </details>
@@ -138,6 +158,8 @@ hooks, and it doesn't need root.
 - **Discover** reads a community theme catalog and fetches preview images.
 - **Find more** (wallpapers) searches the Openverse API.
 - Installs from a link download from the address you paste.
+- Update checks fetch this plugin's own git repository about once a day, and
+  when you choose **⋯ → Check for updates**. You can turn the daily check off.
 
 There's no telemetry and no account.
 
