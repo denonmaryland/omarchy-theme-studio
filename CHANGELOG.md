@@ -12,7 +12,7 @@ First standalone version, prepared for the Omarchy plugin marketplace, under the
 name Best Theme Plugin Ever (plugin ID `io.github.denonmaryland.theme-studio`).
 
 - Self-contained plugin folder: helpers live in `helpers/`. The panel uses
-  Omarchy's stock popup, or the denon.bar glass host when that's installed.
+  Omarchy's stock popup.
 - Rotation and Follow the sun run from the shell; no systemd service.
   Rotation starts paused.
 - Recent/Back history is recorded in-plugin; no theme-set hook.

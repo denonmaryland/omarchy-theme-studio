@@ -16,8 +16,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/images/demo.gif" alt="Clicking through themes in the panel: the whole desktop re-themes with each click" width="880"><br>
-  <sub>Recorded on Omarchy with the author's personal (unpublished) glass bar. On the stock Omarchy bar the same panel opens in Omarchy's standard popup.</sub>
+  <img src="docs/images/demo.gif" alt="Clicking through themes in the panel: the whole desktop re-themes with each click" width="880">
 </p>
 
 <br>
@@ -114,10 +113,8 @@ Omarchy with the shell bar, which includes Python 3 and ImageMagick. `git`
 is needed for repository installs. Window border colors need Omarchy's Lua
 Hyprland config (`~/.config/hypr/hyprland.lua`).
 
-Works on the stock Omarchy bar, where the panel opens in Omarchy's standard
-popup. No other bar plugin is needed. The animated panel seen in the demo
-comes from `denon.bar`, the author's personal bar setup. It is not published,
-and Best Theme Plugin Ever only uses it when it is already installed.
+The panel opens in Omarchy's standard popup on the stock bar. No other bar
+plugin is needed.
 
 <details>
 <summary><b>What it changes on your system</b></summary>
