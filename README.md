@@ -19,6 +19,12 @@
   <img src="docs/images/demo.gif" alt="Clicking through themes in the panel: the whole desktop re-themes with each click" width="880">
 </p>
 
+<p align="center"><sub>
+  Heads up: the bar and the glass/blur effects in some screenshots and the demo are
+  separate customizations of my own setup, not part of this plugin. Installing it adds
+  the theme panel to your existing bar; your bar's look and window effects stay as they are.
+</sub></p>
+
 <br>
 
 <table align="center">
@@ -38,6 +44,30 @@ omarchy plugin add https://github.com/denonmaryland/omarchy-theme-studio --enabl
 ```
 
 Then click the palette icon in the bar.
+
+### Installing with an AI agent
+
+Paste this repository's link into your coding agent (Claude Code, Codex and
+so on) and ask it to install the plugin. For the agent:
+
+1. Confirm this is an Omarchy system: `omarchy plugin list` should run.
+   Stop if it doesn't. This plugin only works inside the Omarchy shell.
+2. Install and enable it with one command. `--yes` is needed when there's no
+   interactive terminal, and it places the widget in the bar's default section:
+
+   ```bash
+   omarchy plugin add https://github.com/denonmaryland/omarchy-theme-studio --enable --yes
+   ```
+
+3. Check that `omarchy plugin list --json` shows
+   `io.github.denonmaryland.theme-studio` with `"enabled": true`.
+4. Tell the user to click the palette icon in the bar.
+
+Don't copy files into the plugins folder by hand (a copied folder can't
+update itself), and don't edit Hyprland, bar or theme config to install it.
+The plugin needs none of that. Optional extras such as window border colors
+ask for permission inside the panel. This plugin doesn't reproduce the bar
+style or glass effects seen in some screenshots.
 
 ## Updates
 
