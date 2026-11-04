@@ -119,7 +119,7 @@ Panel {
   // checks). If the installed manifest is newer, the files were updated but
   // this panel is still the old code until the shell restarts. Plugin rescans
   // re-create the panel from the old QML, so this can't live in memory alone.
-  readonly property string builtVersion: "0.2.0"
+  readonly property string builtVersion: "0.2.1"
   property var updateInfo: ({})
   property string updateBusy: ""   // "check", "install" or "auto" while the helper runs
   property string updateKind: ""   // what the last helper run was, for its result
@@ -2055,67 +2055,81 @@ Panel {
           width: parent.width
           spacing: Style.space(12)
 
-        Flow {
-          visible: root.bgScope === "theme"
+        // A scrolling grid like the other galleries; themes can ship dozens.
+        GridView {
+          id: bgGrid
+          GalleryScroll { view: bgGrid }
+          visible: root.bgScope === "theme" && count > 0
           width: parent.width
-          spacing: Style.space(8)
-          Repeater {
-            model: root.values.backgrounds || []
-            Item {
-              id: bgTile
-              required property var modelData
-              required property int index
-              readonly property bool on: index === root.values.background_index
-              width: root.expanded ? (parent.width - Style.space(16)) / 3 : (parent.width - Style.space(8)) / 2
-              height: bgBox.height + Style.space(24)
-              ClippingRectangle {
-                id: bgBox
-                width: parent.width
-                height: Math.round(width * 0.58)
-                radius: Style.space(10)
-                color: root.alphaOf(root.fg, 0.05)
-                Image {
-                  anchors.fill: parent
-                  source: bgTile.modelData.url
-                  sourceSize.width: 420
-                  fillMode: Image.PreserveAspectCrop
-                  asynchronous: true
-                }
-                Rectangle {
-                  visible: bgTile.on
-                  anchors.top: parent.top; anchors.right: parent.right
-                  anchors.margins: Style.space(7)
-                  width: Style.space(20); height: width; radius: width / 2
-                  color: root.accent
-                  Text { anchors.centerIn: parent; text: "󰄬"; color: Commons.Color.background; font.family: root.glyphFamily; font.pixelSize: Style.font.bodySmall }
-                }
+          readonly property int cols: root.expanded ? 3 : 2
+          readonly property real thumbH: Math.round((width / cols - Style.space(8)) * 0.58)
+          height: root.expanded ? Math.max(Style.space(180), rightPane.height - y - bgShuffle.height - parent.spacing)
+                                : root.fitted(Math.min(contentHeight, cellHeight * 2.5), Style.space(96))
+          cellWidth: width / cols
+          cellHeight: thumbH + Style.space(32)
+          clip: true
+          boundsBehavior: Flickable.StopAtBounds
+          model: root.values.backgrounds || []
+          cacheBuffer: 400
+          QQC.ScrollBar.vertical: QQC.ScrollBar { policy: QQC.ScrollBar.AsNeeded }
+          // Start with the chosen background in view.
+          onCountChanged: if (count > 0 && root.values.background_index >= 0) positionViewAtIndex(root.values.background_index, GridView.Contain)
+          delegate: Item {
+            id: bgTile
+            required property var modelData
+            required property int index
+            readonly property bool on: index === root.values.background_index
+            width: bgGrid.cellWidth
+            height: bgGrid.cellHeight
+            ClippingRectangle {
+              id: bgBox
+              x: Style.space(3); y: Style.space(3)
+              width: parent.width - Style.space(6)
+              height: bgGrid.thumbH
+              radius: Style.space(10)
+              color: root.alphaOf(root.fg, 0.05)
+              Image {
+                anchors.fill: parent
+                source: bgTile.modelData.url
+                sourceSize.width: 420
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
               }
               Rectangle {
-                x: -2; y: -2
-                width: bgBox.width + 4; height: bgBox.height + 4
-                radius: bgBox.radius + 2
-                color: "transparent"
-                border.width: bgTile.on || bgMouse.containsMouse ? 2 : 1
-                border.color: bgTile.on ? root.accent : bgMouse.containsMouse ? root.alphaOf(root.fg, 0.35) : root.alphaOf(root.fg, 0.06)
+                visible: bgTile.on
+                anchors.top: parent.top; anchors.right: parent.right
+                anchors.margins: Style.space(7)
+                width: Style.space(20); height: width; radius: width / 2
+                color: root.accent
+                Text { anchors.centerIn: parent; text: "󰄬"; color: Commons.Color.background; font.family: root.glyphFamily; font.pixelSize: Style.font.bodySmall }
               }
-              Text {
-                y: bgBox.height + Style.space(6)
-                width: parent.width
-                readonly property string pretty: bgTile.modelData.name.replace(/^\d+[-_ ]*/, "").replace(/[-_@]+/g, " ").replace(/\b(4k|8k|hd|uhd)\b/gi, "").trim()
-                text: /^[a-z]{3,}( [a-z]+)*$/i.test(pretty) ? pretty : "Background " + (bgTile.index + 1)
-                elide: Text.ElideRight
-                color: bgTile.on ? root.fg : root.alphaOf(root.fg, 0.7)
-                font.family: root.family; font.pixelSize: Style.font.bodySmall + 1
-                font.weight: bgTile.on ? Font.DemiBold : Font.Medium
-                font.capitalization: Font.Capitalize
-              }
-              MouseArea {
-                id: bgMouse
-                anchors.fill: bgBox
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: if (!bgTile.on) root.act("background-set", bgTile.modelData.path)
-              }
+            }
+            Rectangle {
+              x: bgBox.x - 2; y: bgBox.y - 2
+              width: bgBox.width + 4; height: bgBox.height + 4
+              radius: bgBox.radius + 2
+              color: "transparent"
+              border.width: bgTile.on || bgMouse.containsMouse ? 2 : 1
+              border.color: bgTile.on ? root.accent : bgMouse.containsMouse ? root.alphaOf(root.fg, 0.35) : root.alphaOf(root.fg, 0.06)
+            }
+            Text {
+              x: bgBox.x
+              y: bgBox.y + bgBox.height + Style.space(6)
+              width: bgBox.width
+              readonly property string pretty: bgTile.modelData.name.replace(/^\d+[-_ ]*/, "").replace(/[-_@]+/g, " ").replace(/\b(4k|8k|hd|uhd)\b/gi, "").trim()
+              text: /^[a-z]{3,}( [a-z]+)*$/i.test(pretty) ? pretty : "Background " + (bgTile.index + 1)
+              elide: Text.ElideRight
+              color: bgTile.on ? root.fg : root.alphaOf(root.fg, 0.7)
+              font.family: root.family; font.pixelSize: Style.font.bodySmall + 1
+              font.weight: bgTile.on ? Font.DemiBold : Font.Medium
+              font.capitalization: Font.Capitalize
+            }
+            MouseArea {
+              id: bgMouse
+              anchors.fill: bgBox
+              hoverEnabled: true
+              cursorShape: Qt.PointingHandCursor
+              onClicked: if (!bgTile.on) root.act("background-set", bgTile.modelData.path)
             }
           }
         }
@@ -2129,6 +2143,7 @@ Panel {
         }
 
         GlassTile {
+          id: bgShuffle
           visible: root.bgScope === "theme"
           width: parent.width
           foreground: root.fg

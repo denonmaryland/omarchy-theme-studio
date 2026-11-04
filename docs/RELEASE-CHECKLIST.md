@@ -16,6 +16,16 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
   would qualify. No reply was present on 2026-11-01. Product scope is unchanged;
   any reduced-scope release or new submission needs a separate decision.
 
+## 0.2.1 (prepared 2026-11-04)
+
+- Contents: Backgrounds › This theme is now a scrolling grid (it was an
+  unscrollable Flow that overflowed with many backgrounds, hiding the rest and
+  the Shuffle toggle).
+- `manifest.json` and `builtVersion` are both 0.2.1; CHANGELOG dated.
+- Live-checked on the glass host before the version bump: injected mouse-wheel
+  scrolling in wide and compact layouts with a 35-background theme. Physical
+  trackpad feel, stock host and short screens not checked live.
+
 ## 0.2.0 (prepared 2026-11-02)
 
 - Contents: update checks and the gallery scrolling fix below.

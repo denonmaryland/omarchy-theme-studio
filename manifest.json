@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "io.github.denonmaryland.theme-studio",
   "name": "Best Theme Plugin Ever",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "author": "DeNon Maryland",
   "description": "Browse, apply, rotate and install Omarchy themes from the bar, with community discovery, wallpapers, per-theme window borders and a back button",
   "kinds": ["bar-widget"],

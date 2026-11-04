@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1 (2026-11-04)
+
+- Backgrounds › This theme now scrolls. Themes with many backgrounds used to
+  overflow the panel with no way to reach the rest (or the Shuffle toggle).
+
 ## 0.2.0 (2026-11-02)
 
 - Update checks: about once a day (and on demand from ⋯) the plugin checks the
