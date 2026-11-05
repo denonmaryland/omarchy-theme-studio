@@ -158,9 +158,25 @@ themes and stay installed. Remove them in the panel (⋯ → Delete theme) or wi
 
 ## Requirements
 
-Omarchy with the shell bar, which includes Python 3 and ImageMagick. `git`
-is needed for repository installs. Window border colors need Omarchy's Lua
-Hyprland config (`~/.config/hypr/hyprland.lua`).
+Omarchy 4.0.6 or newer (4.5 supported) with the shell bar, which includes
+Python 3 and ImageMagick. `git` is needed for repository installs. Window
+border colors need Omarchy's Lua Hyprland config (`~/.config/hypr/hyprland.lua`).
+
+**Omarchy 4.5 notes**
+
+- **Video wallpapers.** Where Omarchy plays video backgrounds (4.5), a theme's
+  videos (`.mp4`, `.m4v`, `.mov`, `.webm`, `.mkv`, `.avi`) appear under
+  Backgrounds and are remembered like images. Their tiles show a still from
+  `ffmpegthumbnailer` when it is installed, otherwise a placeholder. On 4.0
+  only images are listed, as before.
+- **Theme intros.** Omarchy 4.5 can play a short intro when a theme changes and
+  remembers each theme's wallpaper itself. A normal switch leaves both to
+  Omarchy. When Shuffle backgrounds or Follow the sun picks the wallpaper
+  itself, the plugin asks Omarchy to skip its own pick, so you see one
+  transition and no intro. Turn intros off everywhere with
+  `omarchy theme bg intro disable` (`enable` brings them back).
+- **Reduced motion.** When Omarchy's animations are turned off
+  (`omarchy toggle animations`), the panel's own animations are off too.
 
 The panel opens in Omarchy's standard popup on the stock bar. No other bar
 plugin is needed.

@@ -2,6 +2,7 @@
 """Best Theme Plugin Ever backend: switch, rotate, rate, remember and remove Omarchy themes."""
 import argparse
 import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -27,6 +28,71 @@ MINUTES = (15, 30, 60)
 THUMBS = HOME / '.cache/omarchy-theme-studio/thumbs'
 PALETTES = STATE_DIR / 'palettes.json'
 IMAGE_EXT = ('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp')
+# Omarchy 4.5 also plays video backgrounds (same list as its omarchy-theme-bg-next).
+VIDEO_EXT = ('.mp4', '.m4v', '.mov', '.webm', '.mkv', '.avi')
+VIDEO_THUMBS = THUMBS / 'video'
+
+
+def video_backgrounds():
+    """True when the installed Omarchy can show video backgrounds (4.5+).
+
+    Feature-detected, not version-matched: 4.5 ships omarchy-theme-bg-intro
+    with its video support, and its omarchy-theme-bg-next lists video types.
+    """
+    if shutil.which('omarchy-theme-bg-intro'):
+        return True
+    nxt = shutil.which('omarchy-theme-bg-next')
+    try:
+        return bool(nxt) and '.mp4' in Path(nxt).read_text(errors='replace')
+    except OSError:
+        return False
+
+
+def background_exts():
+    return IMAGE_EXT + VIDEO_EXT if video_backgrounds() else IMAGE_EXT
+
+
+def is_video(path):
+    return Path(path).suffix.lower() in VIDEO_EXT
+
+
+def video_thumb(path, make=True):
+    """file:// URL of a cached still for a video background, or '' when none can
+    be made (ffmpegthumbnailer missing or failing); the panel then shows a
+    placeholder. make=False only looks in the cache."""
+    still = video_still(path, make)
+    return still.as_uri() if still else ''
+
+
+def video_still(path, make=True):
+    path = Path(path)
+    try:
+        stat = path.stat()
+    except OSError:
+        return None
+    key = hashlib.sha1(f'{path}\0{stat.st_size}\0{stat.st_mtime_ns}'.encode()).hexdigest()[:20]
+    dest = VIDEO_THUMBS / f'{key}.jpg'
+    if dest.is_file():
+        return dest
+    tool = shutil.which('ffmpegthumbnailer')
+    if not tool or not make:
+        return None
+    try:
+        VIDEO_THUMBS.mkdir(parents=True, exist_ok=True)
+        fd, tmp = tempfile.mkstemp(dir=VIDEO_THUMBS, prefix='.pending-', suffix='.jpg')
+        os.close(fd)
+        try:
+            done = subprocess.run([tool, '-i', str(path), '-o', tmp, '-s', '420', '-t', '10%', '-c', 'jpeg', '-q', '8'],
+                                  stdin=subprocess.DEVNULL, capture_output=True, timeout=20)
+            if done.returncode or not os.path.getsize(tmp):
+                return None
+            os.replace(tmp, dest)
+        finally:
+            if os.path.exists(tmp):
+                os.unlink(tmp)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return dest
 
 
 def theme_dir(name):
@@ -224,19 +290,56 @@ def command(*args, timeout=120):
     return result.stdout.strip()
 
 
-def set_theme(selected, timeout=60, background=None):
+def omarchy_remembers(slug, name):
+    """Omarchy 4.5 keeps its own per-theme wallpaper memory; True when it would
+    bring back the wallpaper named `name` for `slug` by itself."""
+    if not name or not slug or '/' in slug or slug in ('.', '..'):
+        return False
+    try:
+        remembered = (HOME / '.local/state/omarchy/theme-backgrounds' / slug).read_text().strip()
+    except OSError:
+        return False
+    # Omarchy records the resolved link, usually under current/theme/backgrounds/,
+    # which the switch replaces; like omarchy-theme-set, match the name and look
+    # for it in the target theme rather than at the recorded path.
+    return Path(remembered).name == name and has_background(slug, name)
+
+
+def skip_background(selected, background, own_background):
+    """Whether `omarchy theme set` should leave the wallpaper to us.
+
+    own_background: the caller sets a wallpaper of its choosing right after the
+    switch (shuffle, Follow the sun's matching variant), so Omarchy's own pick
+    (and on 4.5 its theme intro) would only be replaced a moment later.
+    Otherwise a remembered wallpaper is restored by us on 4.0. On 4.5 Omarchy
+    remembers wallpapers per theme itself, and skipping would also suppress
+    its theme intro, so we only skip when its memory disagrees with ours.
+    """
+    if not background:
+        return False
+    if own_background:
+        return True
+    return not (video_backgrounds() and omarchy_remembers(selected, background))
+
+
+def set_theme(selected, timeout=60, background=None, own_background=False):
     """Run `omarchy theme set` but return once the theme is visibly applied.
 
     omarchy-theme-set holds its lock only while it swaps the theme and hands the
     transition to the shell (~0.5 s); terminals, browser and other app re-tints
     keep running for a few more seconds after that. Waiting for those blocked
     the panel, so they are left to finish in the background.
+
+    background: wallpaper name to show after the switch (when it is not
+    Omarchy's own choice anyway). own_background: that wallpaper is the
+    caller's fresh pick rather than a remembered one.
     """
     log = STATE_DIR / 'theme-set.log'
     lock_path = Path(os.environ.get('XDG_RUNTIME_DIR', '/tmp')) / 'omarchy-theme-set.lock'
-    # With a remembered wallpaper, let Omarchy skip its own pick so the screen
-    # does one wallpaper transition instead of two.
-    env = dict(os.environ, OMARCHY_THEME_SKIP_BACKGROUND='1') if background else None
+    # When we show a wallpaper ourselves, let Omarchy skip its own pick so the
+    # screen does one wallpaper transition instead of two.
+    skip = skip_background(selected, background, own_background)
+    env = dict(os.environ, OMARCHY_THEME_SKIP_BACKGROUND='1') if skip else None
     with log.open('w') as out:
         proc = subprocess.Popen(['omarchy', 'theme', 'set', selected], stdin=subprocess.DEVNULL, env=env,
                                 stdout=out, stderr=subprocess.STDOUT, start_new_session=True)
@@ -246,13 +349,13 @@ def set_theme(selected, timeout=60, background=None):
         if code is not None:
             if code:
                 raise RuntimeError((log.read_text(errors='replace').strip() or 'omarchy theme set failed')[-400:])
-            return restore_background(background)
+            return restore_background(background, force=skip)
         if current_theme() == selected:
             with lock_path.open('a') as lock:
                 try:
                     fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
                     fcntl.flock(lock, fcntl.LOCK_UN)
-                    return restore_background(background)
+                    return restore_background(background, force=skip)
                 except BlockingIOError:
                     pass
         time.sleep(0.02)
@@ -269,12 +372,25 @@ def has_background(slug, name):
                               ([folder / 'backgrounds'] if folder else []) + [HOME / '.config/omarchy/backgrounds' / slug])
 
 
-def restore_background(name):
-    """Show the wallpaper a theme had when you last left it (after the theme swap)."""
-    if not name:
+def theme_background_names(slug):
+    """Wallpaper names a theme will offer once applied, read before switching
+    (the user's folder plus the stock and installed theme folders)."""
+    exts = background_exts()
+    roots = [HOME / '.config/omarchy/backgrounds' / slug, STOCK_THEMES / slug / 'backgrounds', LIVE_THEMES / slug / 'backgrounds']
+    return sorted({p.name for root in roots if root.is_dir() for p in root.iterdir()
+                   if p.is_file() and p.suffix.lower() in exts})
+
+
+def restore_background(name, force=True):
+    """Show the wallpaper a theme had when you last left it (after the theme swap).
+
+    force=False: Omarchy chose the wallpaper itself (4.5 memory); only step in
+    when its choice is not the one we remembered.
+    """
+    if not name or (not force and background_name() == name):
         return
-    match = next((p for p in theme_backgrounds() if p.name == name), None)
     images = theme_backgrounds()
+    match = next((p for p in images if p.name == name), None)
     try:
         command('omarchy', 'theme', 'bg', 'set', str(match or images[0]), timeout=30)
     except Exception:
@@ -311,7 +427,8 @@ def theme_catalog(data, with_palette=True):
     """Browse installed themes independently of the automatic rotation pool."""
     display = labels()
     favorites = set(data.get('favorites', []))
-    extensions = ('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp')
+    extensions = IMAGE_EXT
+    videos = video_backgrounds()
     result = []
     for name in available():
         images = {}
@@ -325,6 +442,13 @@ def theme_catalog(data, with_palette=True):
         for folder in (LIVE_THEMES / name, STOCK_THEMES / name):
             if not preview and (folder / 'preview.png').is_file():
                 preview = [folder / 'preview.png']
+        if not preview and videos:
+            # Video-only theme (Omarchy 4.5): preview a still from its first clip.
+            clips = sorted(p for root in (user, STOCK_THEMES / name / 'backgrounds', LIVE_THEMES / name / 'backgrounds')
+                           if root.is_dir() for p in root.iterdir() if p.is_file() and is_video(p))
+            still = video_still(clips[0]) if clips else None
+            if still:
+                preview = [still]
         thumb = THUMBS / f'{name}.jpg'
         result.append({
             'slug': name,
@@ -651,13 +775,14 @@ def sun_tick(data, now):
 
 
 def apply_variant(data, selected):
-    background = (HOME / '.local/state/omarchy/current/background').resolve(strict=False).name
-    set_theme(selected)
+    background = background_name()
+    # The variant shows the same-named wallpaper right after the switch; with
+    # one it skips Omarchy's own pick (and 4.5's theme intro) so the screen
+    # changes once. Without one, Omarchy picks as usual.
+    keep = background if background in theme_background_names(selected) else None
+    set_theme(selected, background=keep, own_background=True)
     if current_theme() != selected:
         raise RuntimeError(f'Omarchy did not activate {selected}')
-    matching = HOME / '.local/state/omarchy/current/theme/backgrounds' / background
-    if matching.is_file():
-        command('omarchy', 'theme', 'bg', 'set', str(matching), timeout=30)
     data['current'] = selected
     data['last_change'] = time.time()
     data['next_at'] = data['last_change'] + data['interval_minutes'] * 60
@@ -718,7 +843,18 @@ def public(data):
     result['seconds_remaining'] = max(0, int(data['next_at'] - time.time())) if data['enabled'] else None
     result['background'] = str((HOME / '.local/state/omarchy/current/background').resolve(strict=False))
     images = theme_backgrounds()
-    result['backgrounds'] = [{'path': str(p), 'url': background_url(result['current'], p), 'name': p.stem} for p in images]
+    budget = [6]  # new video stills per refresh; the panel refreshes while open
+
+    def video_url(path):
+        cached = video_thumb(path, make=False)
+        if cached or budget[0] <= 0:
+            return cached
+        budget[0] -= 1
+        return video_thumb(path)
+
+    result['backgrounds'] = [{'path': str(p), 'name': p.stem, 'video': is_video(p),
+                              'url': video_url(p) if is_video(p) else background_url(result['current'], p)}
+                             for p in images]
     result['background_index'] = next((i for i, p in enumerate(images) if str(p) == result['background']), -1)
     result['variant_target'] = variant_of(result['current'])
     base = result['variant_target'].removesuffix('-light')
@@ -781,8 +917,9 @@ def theme_backgrounds():
     """Mirror Omarchy's two background locations, resolving duplicate symlinks."""
     name = current_theme()
     roots = [HOME / '.config/omarchy/backgrounds' / name, HOME / '.local/state/omarchy/current/theme/backgrounds']
+    exts = background_exts()  # videos too where Omarchy plays them (4.5)
     images = sorted(p for folder in roots if folder.is_dir() for p in folder.iterdir()
-                    if p.is_file() and p.suffix.lower() in ('.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'))
+                    if p.is_file() and p.suffix.lower() in exts)
     return list(dict.fromkeys(p.resolve() for p in images))
 
 
@@ -814,14 +951,6 @@ def select_background(value, step=False):
     command('omarchy', 'theme', 'bg', 'set', str(selected), timeout=30)
 
 
-def shuffle_background():
-    images = theme_backgrounds()
-    if len(images) > 1:
-        current = (HOME / '.local/state/omarchy/current/background').resolve(strict=False)
-        choice = random.choice([p for p in images if p.resolve() != current] or images)
-        command('omarchy', 'theme', 'bg', 'set', str(choice), timeout=30)
-
-
 def change(data, selected=None):
     names = available()
     if selected is None:
@@ -835,8 +964,15 @@ def change(data, selected=None):
     if before:
         remembered[before] = background_name()
     want = remembered.get(selected)
-    keep = want if want and not data.get('shuffle_background') and has_background(selected, want) else None
-    set_theme(selected, background=keep)
+    if data.get('shuffle_background'):
+        # Shuffle shows its own pick right after the switch: skip Omarchy's
+        # (and 4.5's theme intro) so the wallpaper changes once, not twice.
+        names = theme_background_names(selected)
+        pick = random.choice(names) if names else None
+        set_theme(selected, background=pick, own_background=True)
+    else:
+        keep = want if want and has_background(selected, want) else None
+        set_theme(selected, background=keep)
     if current_theme() != selected:
         raise RuntimeError(f'Omarchy did not activate {selected}')
     if before and before != selected:
@@ -846,11 +982,6 @@ def change(data, selected=None):
     data['next_at'] = data['last_change'] + data['interval_minutes'] * 60
     data['pending_review'] = selected
     data['last_error'] = ''
-    if data['shuffle_background']:
-        try:
-            shuffle_background()
-        except Exception as exc:
-            data['last_error'] = f'Background shuffle: {exc}'
     return selected
 
 

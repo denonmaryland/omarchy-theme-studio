@@ -119,7 +119,11 @@ Panel {
   // checks). If the installed manifest is newer, the files were updated but
   // this panel is still the old code until the shell restarts. Plugin rescans
   // re-create the panel from the old QML, so this can't live in memory alone.
-  readonly property string builtVersion: "0.2.1"
+  readonly property string builtVersion: "0.3.0"
+  // Omarchy 4.5's `omarchy toggle animations` sets Style.reduceMotion; 4.0
+  // has no such property, so read it guarded and animate as before there.
+  readonly property bool reduceMotion: typeof Style.reduceMotion === "boolean" && Style.reduceMotion
+  function dur(ms) { return reduceMotion ? 0 : ms }
   property var updateInfo: ({})
   property string updateBusy: ""   // "check", "install" or "auto" while the helper runs
   property string updateKind: ""   // what the last helper run was, for its result
@@ -879,7 +883,7 @@ Panel {
       width: scope.cell; height: scope.segmentHeight; radius: height / 2
       x: scope.sel * (scope.cell + Style.space(2))
       color: root.alphaOf(root.fg, 0.14)
-      Behavior on x { enabled: root.opened; NumberAnimation { duration: 280; easing.type: Easing.OutQuint } }
+      Behavior on x { enabled: root.opened; NumberAnimation { duration: root.dur(280); easing.type: Easing.OutQuint } }
     }
     Row {
       spacing: Style.space(2)
@@ -894,7 +898,7 @@ Panel {
             Text {
               text: modelData.label
               color: scope.value === modelData.key ? root.fg : root.alphaOf(root.fg, 0.55)
-              Behavior on color { ColorAnimation { duration: 180; easing.type: Easing.OutCubic } }
+              Behavior on color { ColorAnimation { duration: root.dur(180); easing.type: Easing.OutCubic } }
               font.family: root.family; font.pixelSize: Style.font.bodySmall + 1; font.weight: Font.DemiBold
             }
             Text {
@@ -923,7 +927,7 @@ Panel {
     color: on ? root.alphaOf(root.accent, 0.18) : chipPillMouse.containsMouse ? root.alphaOf(root.fg, 0.1) : root.alphaOf(root.fg, 0.05)
     border.width: 1
     border.color: on ? root.alphaOf(root.accent, 0.4) : root.alphaOf(root.fg, 0.08)
-    Behavior on color { ColorAnimation { duration: 140 } }
+    Behavior on color { ColorAnimation { duration: root.dur(140) } }
     Text {
       id: chipLabel
       anchors.centerIn: parent
@@ -945,7 +949,7 @@ Panel {
     height: Style.space(30)
     radius: height / 2
     color: !on && tabMouse.containsMouse ? root.alphaOf(root.fg, 0.05) : "transparent"
-    Behavior on color { ColorAnimation { duration: 120 } }
+    Behavior on color { ColorAnimation { duration: root.dur(120) } }
     Row {
       anchors.centerIn: parent
       spacing: Style.space(6)
@@ -958,7 +962,7 @@ Panel {
       Text {
         text: tabItem.label
         color: tabItem.on ? root.fg : root.alphaOf(root.fg, 0.6)
-        Behavior on color { ColorAnimation { duration: 180; easing.type: Easing.OutCubic } }
+        Behavior on color { ColorAnimation { duration: root.dur(180); easing.type: Easing.OutCubic } }
         font.family: root.family; font.pixelSize: Style.font.bodySmall + 1
         font.weight: Font.DemiBold
       }
@@ -967,7 +971,7 @@ Panel {
         anchors.verticalCenter: parent.verticalCenter
         text: tabItem.count
         color: root.alphaOf(root.fg, tabItem.on ? 0.55 : 0.35)
-        Behavior on color { ColorAnimation { duration: 180; easing.type: Easing.OutCubic } }
+        Behavior on color { ColorAnimation { duration: root.dur(180); easing.type: Easing.OutCubic } }
         font.family: root.family; font.pixelSize: Style.font.caption + 1
       }
     }
@@ -1096,12 +1100,12 @@ Panel {
 
     SequentialAnimation {
       id: layoutSwap
-      NumberAnimation { target: keyboard; property: "opacity"; to: 0; duration: 90; easing.type: Easing.InCubic }
+      NumberAnimation { target: keyboard; property: "opacity"; to: 0; duration: root.dur(90); easing.type: Easing.InCubic }
       ScriptAction { script: { root.expanded = root.pendingExpanded; keyboard.scale = 0.985 } }
-      PauseAnimation { duration: 110 }
+      PauseAnimation { duration: root.dur(110) }
       ParallelAnimation {
-        NumberAnimation { target: keyboard; property: "opacity"; to: 1; duration: 220; easing.type: Easing.OutCubic }
-        NumberAnimation { target: keyboard; property: "scale"; to: 1; duration: 260; easing.type: Easing.OutQuint }
+        NumberAnimation { target: keyboard; property: "opacity"; to: 1; duration: root.dur(220); easing.type: Easing.OutCubic }
+        NumberAnimation { target: keyboard; property: "scale"; to: 1; duration: root.dur(260); easing.type: Easing.OutQuint }
       }
       onStopped: { keyboard.opacity = 1; keyboard.scale = 1 }
     }
@@ -1136,7 +1140,7 @@ Panel {
           asynchronous: true
           cache: false
           opacity: status === Image.Ready ? 1 : 0
-          Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+          Behavior on opacity { NumberAnimation { duration: root.dur(220); easing.type: Easing.OutCubic } }
         }
         Rectangle {
           anchors.fill: parent
@@ -1203,7 +1207,7 @@ Panel {
               color: "transparent"
               border.width: 2
               border.color: root.borderChoice === "none" ? Qt.rgba(1, 1, 1, 0.35) : root.borderColorOf(root.borderChoice)
-              Behavior on border.color { ColorAnimation { duration: 200; easing.type: Easing.OutCubic } }
+              Behavior on border.color { ColorAnimation { duration: root.dur(200); easing.type: Easing.OutCubic } }
               Rectangle {  // slash for "no border"
                 visible: root.borderChoice === "none"
                 anchors.centerIn: parent
@@ -1260,7 +1264,7 @@ Panel {
           color: root.alphaOf(root.fg, 0.14)
           Behavior on x {
             enabled: root.opened
-            NumberAnimation { duration: 280; easing.type: Easing.OutQuint }
+            NumberAnimation { duration: root.dur(280); easing.type: Easing.OutQuint }
           }
         }
         Row {
@@ -1337,7 +1341,7 @@ Panel {
               color: root.alphaOf(root.fg, 0.14)
               Behavior on x {
                 enabled: root.opened
-                NumberAnimation { duration: 280; easing.type: Easing.OutQuint }
+                NumberAnimation { duration: root.dur(280); easing.type: Easing.OutQuint }
               }
             }
             Row {
@@ -1358,7 +1362,7 @@ Panel {
                     anchors.centerIn: parent
                     text: modelData.label
                     color: parent.on ? root.fg : root.alphaOf(root.fg, 0.55)
-                    Behavior on color { ColorAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                    Behavior on color { ColorAnimation { duration: root.dur(180); easing.type: Easing.OutCubic } }
                     font.family: root.family; font.pixelSize: Style.font.bodySmall + 1
                     font.weight: Font.DemiBold
                   }
@@ -1505,7 +1509,7 @@ Panel {
                       color: prof.c[0] || "#222"
                       border.width: prof.on ? 2 : 1
                       border.color: prof.on ? root.accent : root.alphaOf(root.fg, profMouse.containsMouse ? 0.3 : 0.12)
-                      Behavior on border.color { ColorAnimation { duration: 140 } }
+                      Behavior on border.color { ColorAnimation { duration: root.dur(140) } }
                       Text {
                         x: Style.space(8); y: Style.space(6)
                         text: "Aa"
@@ -1673,7 +1677,7 @@ Panel {
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
                 opacity: status === Image.Ready ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: 160 } }
+                Behavior on opacity { NumberAnimation { duration: root.dur(160) } }
               }
               // Surprise me: a mosaic of four random themes
               Grid {
@@ -1736,11 +1740,11 @@ Panel {
                 color: tile.current ? root.accent : Qt.rgba(0.035, 0.035, 0.03, starMouse.containsMouse ? 0.85 : 0.6)
                 // Breathes while the clicked theme is being applied.
                 SequentialAnimation on opacity {
-                  running: tile.landing
+                  running: tile.landing && !root.reduceMotion
                   loops: Animation.Infinite
                   alwaysRunToEnd: true
-                  NumberAnimation { to: 0.45; duration: 420; easing.type: Easing.InOutSine }
-                  NumberAnimation { to: 1; duration: 420; easing.type: Easing.InOutSine }
+                  NumberAnimation { to: 0.45; duration: root.dur(420); easing.type: Easing.InOutSine }
+                  NumberAnimation { to: 1; duration: root.dur(420); easing.type: Easing.InOutSine }
                 }
                 Text {
                   anchors.centerIn: parent
@@ -1767,7 +1771,7 @@ Panel {
               border.color: tile.current ? root.accent
                 : tile.cursored ? root.alphaOf(root.fg, 0.7)
                 : tileMouse.containsMouse ? root.alphaOf(root.fg, 0.35) : root.alphaOf(root.fg, 0.06)
-              Behavior on border.color { ColorAnimation { duration: 140; easing.type: Easing.OutCubic } }
+              Behavior on border.color { ColorAnimation { duration: root.dur(140); easing.type: Easing.OutCubic } }
             }
             Item {
               x: Style.space(5)
@@ -1964,7 +1968,7 @@ Panel {
                   fillMode: Image.PreserveAspectCrop
                   asynchronous: true
                   opacity: status === Image.Ready ? 1 : 0
-                  Behavior on opacity { NumberAnimation { duration: 160 } }
+                  Behavior on opacity { NumberAnimation { duration: root.dur(160) } }
                 }
                 Rectangle {
                   anchors.top: parent.top; anchors.right: parent.right
@@ -1982,7 +1986,7 @@ Panel {
                 color: "transparent"
                 border.width: dtile.picked || dMouse.containsMouse ? 2 : 1
                 border.color: dtile.picked ? root.accent : dMouse.containsMouse ? root.alphaOf(root.fg, 0.35) : root.alphaOf(root.fg, 0.06)
-                Behavior on border.color { ColorAnimation { duration: 140; easing.type: Easing.OutCubic } }
+                Behavior on border.color { ColorAnimation { duration: root.dur(140); easing.type: Easing.OutCubic } }
               }
               Item {
                 x: Style.space(5)
@@ -2090,10 +2094,27 @@ Panel {
               color: root.alphaOf(root.fg, 0.05)
               Image {
                 anchors.fill: parent
-                source: bgTile.modelData.url
+                source: bgTile.modelData.url || ""
                 sourceSize.width: 420
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
+              }
+              // Video backgrounds (Omarchy 4.5): a still when ffmpegthumbnailer
+              // made one, otherwise a placeholder; a badge marks them either way.
+              Text {
+                visible: !!bgTile.modelData.video && !bgTile.modelData.url
+                anchors.centerIn: parent
+                text: "󰕧"
+                color: root.alphaOf(root.fg, 0.45)
+                font.family: root.glyphFamily; font.pixelSize: Style.font.body * 2
+              }
+              Rectangle {
+                visible: !!bgTile.modelData.video
+                anchors.bottom: parent.bottom; anchors.left: parent.left
+                anchors.margins: Style.space(7)
+                width: videoGlyph.implicitWidth + Style.space(10); height: Style.space(20); radius: height / 2
+                color: Qt.rgba(0.035, 0.035, 0.03, 0.6)
+                Text { id: videoGlyph; anchors.centerIn: parent; text: "󰕧"; color: "white"; font.family: root.glyphFamily; font.pixelSize: Style.font.bodySmall }
               }
               Rectangle {
                 visible: bgTile.on
@@ -2327,7 +2348,7 @@ Panel {
                   fillMode: Image.PreserveAspectCrop
                   asynchronous: true
                   opacity: status === Image.Ready ? 1 : 0
-                  Behavior on opacity { NumberAnimation { duration: 160 } }
+                  Behavior on opacity { NumberAnimation { duration: root.dur(160) } }
                 }
                 Rectangle {
                   anchors.left: parent.left; anchors.bottom: parent.bottom
@@ -2345,7 +2366,7 @@ Panel {
                 color: "transparent"
                 border.width: wtile.picked || wMouse.containsMouse ? 2 : 1
                 border.color: wtile.picked ? root.accent : wMouse.containsMouse ? root.alphaOf(root.fg, 0.35) : root.alphaOf(root.fg, 0.06)
-                Behavior on border.color { ColorAnimation { duration: 140; easing.type: Easing.OutCubic } }
+                Behavior on border.color { ColorAnimation { duration: root.dur(140); easing.type: Easing.OutCubic } }
               }
               Text {
                 x: Style.space(5)
@@ -2443,7 +2464,7 @@ Panel {
                 opacity: root.values.enabled ? 1 : 0.35
                 width: parent.width * (root.values.enabled && root.values.interval_minutes
                   ? Math.max(0.02, 1 - (root.values.seconds_remaining || 0) / (root.values.interval_minutes * 60)) : 0)
-                Behavior on width { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
+                Behavior on width { NumberAnimation { duration: root.dur(400); easing.type: Easing.OutCubic } }
               }
             }
           }
@@ -2691,8 +2712,8 @@ Panel {
       opacity: root.borderOpen ? 1 : 0
       scale: root.borderOpen ? 1 : 0.97
       transformOrigin: Item.TopRight
-      Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
-      Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutQuint } }
+      Behavior on opacity { NumberAnimation { duration: root.dur(160); easing.type: Easing.OutCubic } }
+      Behavior on scale { NumberAnimation { duration: root.dur(200); easing.type: Easing.OutQuint } }
       z: 20
       width: Style.space(264)
       x: (root.expanded ? root.sidebarWidth : parent.width) - width - Style.space(4)
@@ -2758,7 +2779,7 @@ Panel {
                 border.width: 2
                 border.color: root.fg
                 opacity: swatch.chosen ? 0.9 : 0
-                Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: root.dur(180); easing.type: Easing.OutCubic } }
               }
               Rectangle {
                 anchors.centerIn: parent
@@ -2767,8 +2788,8 @@ Panel {
                 border.width: 1
                 border.color: Qt.rgba(1, 1, 1, 0.14)
                 scale: swatchMouse.containsMouse && !swatch.chosen ? 1.08 : 1
-                Behavior on width { NumberAnimation { duration: 200; easing.type: Easing.OutQuint } }
-                Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
+                Behavior on width { NumberAnimation { duration: root.dur(200); easing.type: Easing.OutQuint } }
+                Behavior on scale { NumberAnimation { duration: root.dur(160); easing.type: Easing.OutCubic } }
               }
               MouseArea {
                 id: swatchMouse
@@ -2799,7 +2820,7 @@ Panel {
               color: chosen ? root.alphaOf(root.fg, 0.14) : (pillMouse.containsMouse ? root.alphaOf(root.fg, 0.07) : "transparent")
               border.width: 1
               border.color: root.alphaOf(root.fg, chosen ? 0.22 : 0.12)
-              Behavior on color { ColorAnimation { duration: 180; easing.type: Easing.OutCubic } }
+              Behavior on color { ColorAnimation { duration: root.dur(180); easing.type: Easing.OutCubic } }
               Row {
                 anchors.centerIn: parent
                 spacing: Style.space(6)

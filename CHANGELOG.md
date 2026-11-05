@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.3.0 (2026-11-05)
+
+Omarchy 4.5 support; Omarchy 4.0.6 keeps working as before.
+
+- Video wallpapers: on Omarchy versions that play video backgrounds (detected
+  by `omarchy-theme-bg-intro`, or video types in `omarchy-theme-bg-next`),
+  Backgrounds lists a theme's videos, and a remembered video wallpaper is
+  brought back instead of falling back to the first image. Tiles use an
+  `ffmpegthumbnailer` still, or a placeholder without it; a badge marks videos.
+  A theme with only video backgrounds gets a still as its gallery preview.
+- Theme intros: on 4.5 a normal switch no longer forces
+  `OMARCHY_THEME_SKIP_BACKGROUND` just because the plugin remembers a
+  wallpaper. Omarchy's own per-theme memory picks it and can play its intro.
+  The plugin only steps in (skip + restore) when Omarchy's memory disagrees.
+  On 4.0 the remembered wallpaper is restored with the skip, as before.
+- Shuffle backgrounds and Follow the sun's light/dark variant now always ask
+  Omarchy to skip its own pick when they set the wallpaper themselves, so the
+  screen changes once (no intro that is replaced a moment later, and no double
+  transition on 4.0 either). Shuffle now picks from the new theme's
+  backgrounds before switching.
+- Reduced motion: the panel's animations follow Omarchy 4.5's
+  `Style.reduceMotion` (`omarchy toggle animations`) when it exists.
+
 ## 0.2.1 (2026-11-04)
 
 - Backgrounds › This theme now scrolls. Themes with many backgrounds used to

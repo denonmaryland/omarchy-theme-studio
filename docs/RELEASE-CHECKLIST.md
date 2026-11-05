@@ -16,6 +16,19 @@ https://github.com/omacom/omarchy-plugin-marketplace (rules: SUBMISSION.md, SECU
   would qualify. No reply was present on 2026-11-01. Product scope is unchanged;
   any reduced-scope release or new submission needs a separate decision.
 
+## 0.3.0 (working tree, 2026-11-05; not committed or released)
+
+- Contents: Omarchy 4.5 forward compatibility (video wallpapers, theme-intro
+  friendly skip logic, shuffle/Follow the sun single transition, reduced motion).
+- `manifest.json` and `builtVersion` are both 0.3.0; CHANGELOG entry undated.
+- Checked on 4.0.6 source only: Python/Node suites, `omarchy plugin validate`,
+  `git diff --check`, qmllint (no new syntax errors), a real
+  `ffmpegthumbnailer` still from a generated clip, and 4.5 feature detection
+  against an extracted 4.5 `bin/`.
+- Not checked live: 4.0.6 panel after deploy; anything on a running 4.5
+  session (video tiles, intro playing on a normal switch, no intro with
+  Shuffle/Follow the sun, reduced motion).
+
 ## 0.2.1 (prepared 2026-11-04)
 
 - Contents: Backgrounds › This theme is now a scrolling grid (it was an
